@@ -35,7 +35,7 @@ Ce projet dépend d'une librairie privée hébergée sur GitHub (`fabricateur`).
         <server>
             <id>github-le-prof-de-raizo</id>
             <username>le-prof-de-raizo</username>
-            <password>VOTRE_TOKEN_GITHUB_ICI</password>
+            <password>TOKEN_DU_PROF_ICI</password>
         </server>
     </servers>
 </settings>
