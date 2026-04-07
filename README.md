@@ -1,6 +1,6 @@
 # **La Fabrique de Lunettes**
 
-Bienvenue dans le projet de la ùùFabrique de Lunettes ! 
+Bienvenue dans le projet de la Fabrique de Lunettes ! 
 Ce projet implémente un système distribué permettant de commander des lunettes connectées, de les faire fabriquer par une usine, et de suivre leur expédition grâce à une architecture orientée événements (EDA).
 
 ## Architecture du projet
