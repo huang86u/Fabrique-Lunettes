@@ -36,11 +36,11 @@ public class ClientShell {
         Label eyebrow = new Label("FABRIQUE");
         eyebrow.getStyleClass().add("sidebar-eyebrow");
 
-        Label title = new Label("Client\nlunettes");
+        Label title = new Label("Maison\nlunettes");
         title.getStyleClass().add("sidebar-title");
 
         Label subtitle = new Label(
-                "Base JavaFX du client. Le catalogue, la commande et le suivi MQTT viendront dans les prochains commits."
+                "Retrouvez les collections, preparez votre commande et consultez son suivi au meme endroit."
         );
         subtitle.setWrapText(true);
         subtitle.getStyleClass().add("sidebar-copy");
@@ -56,11 +56,11 @@ public class ClientShell {
         VBox navigationBlock = new VBox(10, homeButton, catalogueButton, orderButton, statusButton);
         navigationBlock.getStyleClass().add("sidebar-section");
 
-        Label footerTitle = new Label("Perimetre du commit 1");
+        Label footerTitle = new Label("Selection du jour");
         footerTitle.getStyleClass().add("sidebar-section-title");
 
         Label footerCopy = new Label(
-                "Installer une vraie interface cliente sans modifier le backend ni le protocole partage."
+                "Choisissez un modele, composez votre demande et gardez un oeil sur son avancement."
         );
         footerCopy.setWrapText(true);
         footerCopy.getStyleClass().add("sidebar-copy");
@@ -106,35 +106,33 @@ public class ClientShell {
     }
 
     private VBox createHomeView() {
-        Label pageTitle = new Label("Squelette du client JavaFX");
+        Label pageTitle = new Label("Bienvenue");
         pageTitle.getStyleClass().add("page-title");
 
         Label pageCopy = new Label(
-                "L'application cliente existe maintenant comme base de travail. "
-                        + "Le prochain commit ajoutera le catalogue et la selection des lunettes."
+                "Accedez rapidement aux collections, preparez votre commande et consultez son statut depuis un seul espace."
         );
         pageCopy.setWrapText(true);
         pageCopy.getStyleClass().add("page-copy");
 
         HBox summaryCards = new HBox(
                 16,
-                createSummaryCard("Catalogue", "Vue reservee pour les produits et les quantites."),
-                createSummaryCard("Commande", "Zone qui servira a construire et envoyer une commande."),
-                createSummaryCard("Statut", "Espace prevu pour afficher la reponse du backend.")
+                createSummaryCard("Catalogue", "Parcourez les modeles et comparez les styles disponibles."),
+                createSummaryCard("Commande", "Regroupez vos choix avant validation."),
+                createSummaryCard("Statut", "Consultez les dernieres nouvelles de votre demande.")
         );
         HBox.setHgrow(summaryCards.getChildren().get(0), Priority.ALWAYS);
         HBox.setHgrow(summaryCards.getChildren().get(1), Priority.ALWAYS);
         HBox.setHgrow(summaryCards.getChildren().get(2), Priority.ALWAYS);
 
         VBox milestoneCard = createSectionCard(
-                "Point de depart",
-                "Le module JavaFX etait vide. Ce commit pose une structure utilisable sans toucher au code d'Alex."
+                "Esprit de la maison",
+                "Des lignes claires, une navigation simple et un parcours fluide pour preparer chaque commande."
         );
 
         VBox sharedInfoCard = createSectionCard(
-                "Donnees partagees deja disponibles",
-                "Le module shared existe deja pour porter les types de lunettes et le format de commande. "
-                        + "Le frontend s'y branchera dans le prochain commit."
+                "Collections",
+                "Retrouvez les modeles de la fabrique, leurs details et les informations utiles avant de finaliser votre choix."
         );
 
         HBox lowerRow = new HBox(16, milestoneCard, sharedInfoCard);
@@ -149,15 +147,14 @@ public class ClientShell {
         pageTitle.getStyleClass().add("page-title");
 
         Label pageCopy = new Label(
-                "Cette vue est prete a recevoir les cartes produits, les images et les quantites. "
-                        + "Le commit suivant branchera la selection des lunettes."
+                "Explorez les collections disponibles et choisissez la paire qui vous correspond."
         );
         pageCopy.setWrapText(true);
         pageCopy.getStyleClass().add("page-copy");
 
         VBox placeholder = createSectionCard(
-                "Travail prevu",
-                "Afficher les modeles, la description, le prix et un selecteur de quantite pour chaque type."
+                "Selection",
+                "Les modeles, leurs details et les quantites apparaitront ici."
         );
 
         return createPage("Catalogue", pageTitle, pageCopy, placeholder);
@@ -168,14 +165,14 @@ public class ClientShell {
         pageTitle.getStyleClass().add("page-title");
 
         Label pageCopy = new Label(
-                "L'emplacement de la commande est pret. Le client MQTT viendra apres le catalogue pour publier la commande."
+                "Preparez votre demande avant de l'envoyer a l'atelier."
         );
         pageCopy.setWrapText(true);
         pageCopy.getStyleClass().add("page-copy");
 
         VBox placeholder = createSectionCard(
-                "Travail prevu",
-                "Construire une commande a partir de la selection utilisateur puis l'envoyer sur le broker MQTT."
+                "Recapitulatif",
+                "Le contenu de votre commande apparaitra ici."
         );
 
         return createPage("Commande", pageTitle, pageCopy, placeholder);
@@ -186,14 +183,14 @@ public class ClientShell {
         pageTitle.getStyleClass().add("page-title");
 
         Label pageCopy = new Label(
-                "Cette vue accueillera les reponses validated et cancelled dans le quatrieme commit."
+                "Suivez l'avancement de votre demande et consultez les derniers retours."
         );
         pageCopy.setWrapText(true);
         pageCopy.getStyleClass().add("page-copy");
 
         VBox placeholder = createSectionCard(
-                "Travail prevu",
-                "Afficher l'etat courant de la commande et les messages retournes par le backend."
+                "Suivi",
+                "Les mises a jour de commande apparaitront ici."
         );
 
         return createPage("Statut", pageTitle, pageCopy, placeholder);
