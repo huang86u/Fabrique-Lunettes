@@ -1,12 +1,23 @@
 package fr.miage.client;
+import fr.miage.shared.TypeLunette;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -14,13 +25,53 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 public class ClientShell {
+    private static final List<ProductDefinition> PRODUCTS = List.of(
+            new ProductDefinition(
+                    TypeLunette.BANANA,
+                    "Bananaaaa",
+                    89.99,
+                    "Nouveau",
+                    "Design iconique des annees 50, parfait pour un look vintage et decontracte."
+            ),
+            new ProductDefinition(
+                    TypeLunette.CHATGPT,
+                    "BlaBlaBla",
+                    74.99,
+                    "",
+                    "Lunettes style aviateur avec verres polarises et monture en metal dore."
+            ),
+            new ProductDefinition(
+                    TypeLunette.LE_CHAT,
+                    "Miaousse",
+                    129.99,
+                    "-10%",
+                    "Lunettes de vue sophistiquees avec monture fine et design contemporain."
+            ),
+            new ProductDefinition(
+                    TypeLunette.CLAUDE,
+                    "Claude",
+                    99.99,
+                    "Bestseller",
+                    "Monture ultra-legere et resistante, ideale pour les activites sportives."
+            )
+    );
+
     private final BorderPane root = new BorderPane();
     private final StackPane contentHost = new StackPane();
     private final List<Button> navigationButtons = new ArrayList<>();
+    private final Map<TypeLunette, IntegerProperty> selectedQuantities = new EnumMap<>(TypeLunette.class);
+    private VBox homeView;
+    private VBox catalogueView;
+    private VBox orderView;
+    private VBox statusView;
 
     public ClientShell() {
         root.getStyleClass().add("app-shell");
         contentHost.getStyleClass().add("content-host");
+
+        for (ProductDefinition product : PRODUCTS) {
+            selectedQuantities.put(product.type(), new SimpleIntegerProperty(0));
+        }
 
         root.setLeft(createSidebar());
         root.setCenter(contentHost);
@@ -97,12 +148,16 @@ public class ClientShell {
             navigationButtons.get(0).getStyleClass().add("nav-button-active");
         }
 
-        contentHost.getChildren().setAll(switch (viewKey) {
-            case HOME -> createHomeView();
-            case CATALOGUE -> createCataloguePlaceholder();
-            case ORDER -> createOrderPlaceholder();
-            case STATUS -> createStatusPlaceholder();
-        });
+        contentHost.getChildren().setAll(resolveView(viewKey));
+    }
+
+    private Node resolveView(ViewKey viewKey) {
+        return switch (viewKey) {
+            case HOME -> homeView == null ? (homeView = createHomeView()) : homeView;
+            case CATALOGUE -> catalogueView == null ? (catalogueView = createCataloguePlaceholder()) : catalogueView;
+            case ORDER -> orderView == null ? (orderView = createOrderPlaceholder()) : orderView;
+            case STATUS -> statusView == null ? (statusView = createStatusPlaceholder()) : statusView;
+        };
     }
 
     private VBox createHomeView() {
@@ -117,8 +172,8 @@ public class ClientShell {
 
         HBox summaryCards = new HBox(
                 16,
-                createSummaryCard("Catalogue", "Parcourez les modeles et comparez les styles disponibles."),
-                createSummaryCard("Commande", "Regroupez vos choix avant validation."),
+                createSummaryCard("Catalogue", PRODUCTS.size() + " modeles disponibles"),
+                createBoundSummaryCard("Selection", this::selectionOverviewText),
                 createSummaryCard("Statut", "Consultez les dernieres nouvelles de votre demande.")
         );
         HBox.setHgrow(summaryCards.getChildren().get(0), Priority.ALWAYS);
@@ -152,12 +207,23 @@ public class ClientShell {
         pageCopy.setWrapText(true);
         pageCopy.getStyleClass().add("page-copy");
 
-        VBox placeholder = createSectionCard(
-                "Selection",
-                "Les modeles, leurs details et les quantites apparaitront ici."
-        );
+        FlowPane productGrid = new FlowPane(18, 18);
+        productGrid.getStyleClass().add("product-grid");
+        productGrid.setPrefWrapLength(860);
 
-        return createPage("Catalogue", pageTitle, pageCopy, placeholder);
+        for (ProductDefinition product : PRODUCTS) {
+            productGrid.getChildren().add(createProductCard(product));
+        }
+
+        VBox selectionCard = createSectionCard(
+                "Selection",
+                createContentLabel("Composez librement votre panier avant de passer a la commande."),
+                createValueLabel(selectionOverviewText(), "summary-value")
+        );
+        Label selectionLabel = (Label) selectionCard.getChildren().get(selectionCard.getChildren().size() - 1);
+        selectionLabel.textProperty().bind(Bindings.createStringBinding(this::selectionOverviewText, spinnerDependencies()));
+
+        return createPage("Catalogue", pageTitle, pageCopy, productGrid, selectionCard);
     }
 
     private VBox createOrderPlaceholder() {
@@ -172,8 +238,11 @@ public class ClientShell {
 
         VBox placeholder = createSectionCard(
                 "Recapitulatif",
-                "Le contenu de votre commande apparaitra ici."
+                createContentLabel("Retrouvez ici les paires choisies avant validation."),
+                createValueLabel(orderSummaryText(), "order-summary")
         );
+        Label orderSummary = (Label) placeholder.getChildren().get(placeholder.getChildren().size() - 1);
+        orderSummary.textProperty().bind(Bindings.createStringBinding(this::orderSummaryText, spinnerDependencies()));
 
         return createPage("Commande", pageTitle, pageCopy, placeholder);
     }
@@ -196,7 +265,7 @@ public class ClientShell {
         return createPage("Statut", pageTitle, pageCopy, placeholder);
     }
 
-    private VBox createPage(String headerLabel, javafx.scene.Node... sections) {
+    private VBox createPage(String headerLabel, Node... sections) {
         Label header = new Label(headerLabel);
         header.getStyleClass().add("page-label");
 
@@ -209,24 +278,161 @@ public class ClientShell {
     }
 
     private VBox createSummaryCard(String titleText, String bodyText) {
-        VBox card = createSectionCard(titleText, bodyText);
+        VBox card = createSectionCard(titleText, createValueLabel(bodyText, "summary-value"));
+        card.setPrefWidth(240);
+        return card;
+    }
+
+    private VBox createBoundSummaryCard(String titleText, java.util.function.Supplier<String> textSupplier) {
+        Label valueLabel = createValueLabel(textSupplier.get(), "summary-value");
+        valueLabel.textProperty().bind(Bindings.createStringBinding(textSupplier::get, spinnerDependencies()));
+
+        VBox card = createSectionCard(titleText, valueLabel);
         card.setPrefWidth(240);
         return card;
     }
 
     private VBox createSectionCard(String titleText, String bodyText) {
+        return createSectionCard(titleText, createContentLabel(bodyText));
+    }
+
+    private VBox createSectionCard(String titleText, Node... contentNodes) {
         Label title = new Label(titleText);
         title.getStyleClass().add("section-title");
-
-        Label body = new Label(bodyText);
-        body.setWrapText(true);
-        body.getStyleClass().add("section-copy");
-
-        VBox card = new VBox(10, title, body);
+        VBox card = new VBox(10, title);
+        card.getChildren().addAll(contentNodes);
         card.setAlignment(Pos.TOP_LEFT);
         card.setPadding(new Insets(18));
         card.getStyleClass().add("section-card");
         return card;
+    }
+
+    private VBox createProductCard(ProductDefinition product) {
+        Label codeLabel = new Label(product.type().name());
+        codeLabel.getStyleClass().add("product-code");
+
+        HBox header = new HBox(8, codeLabel);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        if (!product.badge().isBlank()) {
+            Label badgeLabel = new Label(product.badge());
+            badgeLabel.getStyleClass().add("product-badge");
+            header.getChildren().add(badgeLabel);
+        }
+
+        Label nameLabel = new Label(product.displayName());
+        nameLabel.getStyleClass().add("product-name");
+
+        Label descriptionLabel = createContentLabel(product.description());
+        descriptionLabel.getStyleClass().add("product-description");
+
+        Label priceLabel = createValueLabel(formatPrice(product.price()), "product-price");
+
+        Spinner<Integer> quantitySpinner = createQuantitySpinner(product.type());
+
+        Label quantityLabel = new Label("Quantite");
+        quantityLabel.getStyleClass().add("field-label");
+
+        VBox quantityBox = new VBox(8, quantityLabel, quantitySpinner);
+        quantityBox.getStyleClass().add("quantity-box");
+
+        VBox card = new VBox(12, header, nameLabel, descriptionLabel, priceLabel, quantityBox);
+        card.setPrefWidth(260);
+        card.setPadding(new Insets(18));
+        card.getStyleClass().add("product-card");
+        return card;
+    }
+
+    private Spinner<Integer> createQuantitySpinner(TypeLunette type) {
+        IntegerProperty quantityProperty = selectedQuantities.get(type);
+        Spinner<Integer> spinner = new Spinner<>();
+        SpinnerValueFactory.IntegerSpinnerValueFactory valueFactory =
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 9, quantityProperty.get());
+        spinner.setValueFactory(valueFactory);
+        valueFactory.valueProperty().bindBidirectional(quantityProperty.asObject());
+        spinner.setEditable(false);
+        spinner.setPrefWidth(110);
+        spinner.getStyleClass().add("quantity-spinner");
+        return spinner;
+    }
+
+    private Label createContentLabel(String text) {
+        Label label = new Label(text);
+        label.setWrapText(true);
+        label.getStyleClass().add("section-copy");
+        return label;
+    }
+
+    private Label createValueLabel(String text, String styleClass) {
+        Label label = new Label(text);
+        label.setWrapText(true);
+        label.getStyleClass().add(styleClass);
+        return label;
+    }
+
+    private Observable[] spinnerDependencies() {
+        return selectedQuantities.values().stream()
+                .map(quantity -> (Observable) quantity)
+                .toArray(Observable[]::new);
+    }
+
+    private String selectionOverviewText() {
+        List<String> selections = new ArrayList<>();
+        int total = 0;
+
+        for (ProductDefinition product : PRODUCTS) {
+            int quantity = selectedQuantities.get(product.type()).get();
+
+            if (quantity <= 0) {
+                continue;
+            }
+
+            total += quantity;
+            selections.add(product.displayName() + " x" + quantity);
+        }
+
+        if (total == 0) {
+            return "Aucune paire selectionnee";
+        }
+
+        return total + " paire(s) choisie(s) : " + String.join(", ", selections);
+    }
+
+    private String orderSummaryText() {
+        StringBuilder builder = new StringBuilder();
+        double totalPrice = 0.0;
+
+        for (ProductDefinition product : PRODUCTS) {
+            int quantity = selectedQuantities.get(product.type()).get();
+
+            if (quantity <= 0) {
+                continue;
+            }
+
+            double linePrice = quantity * product.price();
+            totalPrice += linePrice;
+
+            if (!builder.isEmpty()) {
+                builder.append("\n");
+            }
+
+            builder.append(product.displayName())
+                    .append(" x")
+                    .append(quantity)
+                    .append(" - ")
+                    .append(formatPrice(linePrice));
+        }
+
+        if (builder.isEmpty()) {
+            return "Aucune paire n'a encore ete ajoutee a la commande.";
+        }
+
+        builder.append("\n\nTotal estime : ").append(formatPrice(totalPrice));
+        return builder.toString();
+    }
+
+    private String formatPrice(double price) {
+        return String.format("%.2f EUR", price);
     }
 
     private enum ViewKey {

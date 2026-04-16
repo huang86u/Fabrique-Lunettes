@@ -107,3 +107,73 @@
     -fx-font-size: 14px;
     -fx-line-spacing: 2px;
 }
+
+.summary-value {
+    -fx-text-fill: #16212f;
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+}
+
+.product-grid {
+    -fx-hgap: 18;
+    -fx-vgap: 18;
+}
+
+.product-card {
+    -fx-background-color: rgba(255, 255, 255, 0.96);
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(22, 33, 47, 0.08);
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.product-code {
+    -fx-text-fill: #405162;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+}
+
+.product-badge {
+    -fx-background-color: #e8f6f1;
+    -fx-background-radius: 8;
+    -fx-padding: 4 8 4 8;
+    -fx-text-fill: #216c5b;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+}
+
+.product-name {
+    -fx-text-fill: #16212f;
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+}
+
+.product-description {
+    -fx-min-height: 84px;
+}
+
+.product-price {
+    -fx-text-fill: #234d7d;
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+}
+
+.field-label {
+    -fx-text-fill: #5d6d7d;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+}
+
+.quantity-box {
+    -fx-padding: 4 0 0 0;
+}
+
+.quantity-spinner {
+    -fx-pref-height: 36px;
+}
+
+.order-summary {
+    -fx-text-fill: #16212f;
+    -fx-font-size: 16px;
+    -fx-line-spacing: 4px;
+}
