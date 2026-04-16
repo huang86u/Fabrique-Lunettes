@@ -3,6 +3,7 @@ package fr.miage.client;
 import fr.miage.shared.Commande;
 import fr.miage.shared.TypeLunette;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +11,9 @@ import java.util.UUID;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -67,8 +70,10 @@ public class ClientShell {
     private final List<Button> navigationButtons = new ArrayList<>();
     private final Map<TypeLunette, IntegerProperty> selectedQuantities = new EnumMap<>(TypeLunette.class);
     private final StringProperty connectionStatus = new SimpleStringProperty("Connexion en cours...");
+    private final StringProperty orderStatus = new SimpleStringProperty("Aucune commande en attente");
     private final StringProperty publishStatus = new SimpleStringProperty("Aucune commande envoyee");
     private final StringProperty currentOrderId = new SimpleStringProperty("-");
+    private final BooleanProperty orderPending = new SimpleBooleanProperty(false);
     private final FrontendConfiguration configuration;
     private final FrontendMqttService mqttService;
     private VBox homeView;
@@ -270,6 +275,10 @@ public class ClientShell {
         Button sendOrderButton = new Button("Envoyer la commande");
         sendOrderButton.getStyleClass().addAll("action-button", "primary-button");
         sendOrderButton.setOnAction(event -> sendCurrentOrder());
+        sendOrderButton.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> !hasSelectedProducts() || orderPending.get(),
+                selectionAndOrderDependencies()
+        ));
 
         Label publishStatusLabel = createValueLabel(publishStatus.get(), "status-copy");
         publishStatusLabel.textProperty().bind(publishStatus);
@@ -277,11 +286,15 @@ public class ClientShell {
         Label orderIdLabel = createValueLabel(currentOrderId.get(), "status-copy");
         orderIdLabel.textProperty().bind(Bindings.concat("Reference : ", currentOrderId));
 
+        Label orderStateLabel = createValueLabel(orderStatus.get(), "status-copy");
+        orderStateLabel.textProperty().bind(Bindings.concat("Etat : ", orderStatus));
+
         VBox placeholder = createSectionCard(
                 "Recapitulatif",
                 createContentLabel("Retrouvez ici les paires choisies avant validation."),
                 createValueLabel(orderSummaryText(), "order-summary"),
                 sendOrderButton,
+                orderStateLabel,
                 publishStatusLabel,
                 orderIdLabel
         );
@@ -306,11 +319,13 @@ public class ClientShell {
                 createContentLabel("Dernier etat de la commande en cours."),
                 createValueLabel(connectionStatus.get(), "status-copy"),
                 createValueLabel(currentOrderId.get(), "status-copy"),
+                createValueLabel(orderStatus.get(), "status-copy"),
                 createValueLabel(publishStatus.get(), "status-copy")
         );
         ((Label) placeholder.getChildren().get(2)).textProperty().bind(Bindings.concat("Connexion : ", connectionStatus));
         ((Label) placeholder.getChildren().get(3)).textProperty().bind(Bindings.concat("Reference : ", currentOrderId));
-        ((Label) placeholder.getChildren().get(4)).textProperty().bind(publishStatus);
+        ((Label) placeholder.getChildren().get(4)).textProperty().bind(Bindings.concat("Etat : ", orderStatus));
+        ((Label) placeholder.getChildren().get(5)).textProperty().bind(publishStatus);
 
         return createPage("Statut", pageTitle, pageCopy, placeholder);
     }
@@ -426,6 +441,16 @@ public class ClientShell {
                 .toArray(Observable[]::new);
     }
 
+    private Observable[] selectionAndOrderDependencies() {
+        Observable[] dependencies = Arrays.copyOf(spinnerDependencies(), selectedQuantities.size() + 1);
+        dependencies[dependencies.length - 1] = orderPending;
+        return dependencies;
+    }
+
+    private boolean hasSelectedProducts() {
+        return selectedQuantities.values().stream().anyMatch(quantity -> quantity.get() > 0);
+    }
+
     private String selectionOverviewText() {
         List<String> selections = new ArrayList<>();
         int total = 0;
@@ -506,6 +531,8 @@ public class ClientShell {
         }
 
         if (orderLines.isEmpty()) {
+            orderPending.set(false);
+            orderStatus.set("Aucune commande en attente");
             publishStatus.set("Selectionnez au moins une paire avant l'envoi");
             currentOrderId.set("-");
             return;
@@ -515,11 +542,48 @@ public class ClientShell {
         currentOrderId.set(orderId);
 
         try {
-            mqttService.sendOrder(orderId, new Commande(orderLines));
+            mqttService.sendOrder(
+                    orderId,
+                    new Commande(orderLines),
+                    () -> onOrderValidated(orderId),
+                    reason -> onOrderCancelled(orderId, reason)
+            );
+            orderPending.set(true);
+            orderStatus.set("En attente de validation");
             publishStatus.set("Commande envoyee a l'atelier");
         } catch (RuntimeException exception) {
+            orderPending.set(false);
+            orderStatus.set("Envoi non confirme");
             publishStatus.set("Envoi impossible : " + exception.getMessage());
         }
+    }
+
+    private void onOrderValidated(String orderId) {
+        Platform.runLater(() -> {
+            if (!orderId.equals(currentOrderId.get())) {
+                return;
+            }
+
+            orderPending.set(false);
+            orderStatus.set("Commande validee");
+            publishStatus.set("Commande acceptee par l'atelier");
+        });
+    }
+
+    private void onOrderCancelled(String orderId, String reason) {
+        Platform.runLater(() -> {
+            if (!orderId.equals(currentOrderId.get())) {
+                return;
+            }
+
+            orderPending.set(false);
+            orderStatus.set("Commande annulee");
+            if (reason == null || reason.isBlank()) {
+                publishStatus.set("Commande annulee par l'atelier");
+            } else {
+                publishStatus.set(reason);
+            }
+        });
     }
 
     private enum ViewKey {
