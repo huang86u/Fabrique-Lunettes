@@ -1,0 +1,109 @@
+.root {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.app-shell {
+    -fx-background-color: linear-gradient(to bottom right, #f4f7fb, #e7eef6);
+}
+
+.sidebar {
+    -fx-background-color: #16212f;
+    -fx-border-color: #243244;
+    -fx-border-width: 0 1 0 0;
+}
+
+.sidebar-section {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 8;
+    -fx-padding: 16;
+    -fx-spacing: 8;
+}
+
+.sidebar-eyebrow {
+    -fx-text-fill: #8cc9ff;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-letter-spacing: 0;
+}
+
+.sidebar-title {
+    -fx-text-fill: #f7fbff;
+    -fx-font-size: 28px;
+    -fx-font-weight: 800;
+}
+
+.sidebar-copy,
+.sidebar-section-title {
+    -fx-text-fill: #c3d0dd;
+}
+
+.sidebar-section-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+}
+
+.nav-button {
+    -fx-background-color: #223246;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-text-fill: #f7fbff;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-padding: 12 14 12 14;
+    -fx-alignment: center-left;
+}
+
+.nav-button:hover {
+    -fx-background-color: #2d425c;
+}
+
+.nav-button-active {
+    -fx-background-color: #7fd2be;
+    -fx-text-fill: #10202c;
+}
+
+.content-host {
+    -fx-padding: 0;
+}
+
+.page-content {
+    -fx-fill-width: true;
+    -fx-spacing: 20;
+}
+
+.page-label {
+    -fx-text-fill: #5d6d7d;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+}
+
+.page-title {
+    -fx-text-fill: #16212f;
+    -fx-font-size: 32px;
+    -fx-font-weight: 800;
+}
+
+.page-copy {
+    -fx-text-fill: #405162;
+    -fx-font-size: 15px;
+}
+
+.section-card {
+    -fx-background-color: rgba(255, 255, 255, 0.92);
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(22, 33, 47, 0.08);
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.section-title {
+    -fx-text-fill: #16212f;
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+}
+
+.section-copy {
+    -fx-text-fill: #506173;
+    -fx-font-size: 14px;
+    -fx-line-spacing: 2px;
+}
