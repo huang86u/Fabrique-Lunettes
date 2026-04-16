@@ -1,13 +1,19 @@
 package fr.miage.client;
+
+import fr.miage.shared.Commande;
 import fr.miage.shared.TypeLunette;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -60,6 +66,11 @@ public class ClientShell {
     private final StackPane contentHost = new StackPane();
     private final List<Button> navigationButtons = new ArrayList<>();
     private final Map<TypeLunette, IntegerProperty> selectedQuantities = new EnumMap<>(TypeLunette.class);
+    private final StringProperty connectionStatus = new SimpleStringProperty("Connexion en cours...");
+    private final StringProperty publishStatus = new SimpleStringProperty("Aucune commande envoyee");
+    private final StringProperty currentOrderId = new SimpleStringProperty("-");
+    private final FrontendConfiguration configuration;
+    private final FrontendMqttService mqttService;
     private VBox homeView;
     private VBox catalogueView;
     private VBox orderView;
@@ -68,6 +79,10 @@ public class ClientShell {
     public ClientShell() {
         root.getStyleClass().add("app-shell");
         contentHost.getStyleClass().add("content-host");
+        configuration = FrontendConfiguration.fromProperties();
+        mqttService = new FrontendMqttService(configuration, status ->
+                Platform.runLater(() -> connectionStatus.set(status))
+        );
 
         for (ProductDefinition product : PRODUCTS) {
             selectedQuantities.put(product.type(), new SimpleIntegerProperty(0));
@@ -76,11 +91,16 @@ public class ClientShell {
         root.setLeft(createSidebar());
         root.setCenter(contentHost);
 
+        connectToBroker();
         showView(ViewKey.HOME, null);
     }
 
     public Parent getRoot() {
         return root;
+    }
+
+    public void shutdown() {
+        mqttService.close();
     }
 
     private VBox createSidebar() {
@@ -98,6 +118,17 @@ public class ClientShell {
 
         VBox brandBlock = new VBox(10, eyebrow, title, subtitle);
         brandBlock.getStyleClass().add("sidebar-section");
+
+        Label connectionTitle = new Label("Connexion");
+        connectionTitle.getStyleClass().add("sidebar-section-title");
+
+        Label connectionValue = createValueLabel(connectionStatus.get(), "status-pill");
+        connectionValue.textProperty().bind(connectionStatus);
+
+        Label brokerLabel = createContentLabel("Broker : " + configuration.brokerUrl());
+
+        VBox connectionBlock = new VBox(8, connectionTitle, connectionValue, brokerLabel);
+        connectionBlock.getStyleClass().add("sidebar-section");
 
         Button homeButton = createNavButton("Accueil", ViewKey.HOME);
         Button catalogueButton = createNavButton("Catalogue", ViewKey.CATALOGUE);
@@ -122,7 +153,7 @@ public class ClientShell {
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
-        VBox sidebar = new VBox(24, brandBlock, navigationBlock, spacer, footerBlock);
+        VBox sidebar = new VBox(24, brandBlock, connectionBlock, navigationBlock, spacer, footerBlock);
         sidebar.setPadding(new Insets(28, 24, 28, 24));
         sidebar.setPrefWidth(280);
         sidebar.getStyleClass().add("sidebar");
@@ -174,7 +205,7 @@ public class ClientShell {
                 16,
                 createSummaryCard("Catalogue", PRODUCTS.size() + " modeles disponibles"),
                 createBoundSummaryCard("Selection", this::selectionOverviewText),
-                createSummaryCard("Statut", "Consultez les dernieres nouvelles de votre demande.")
+                createBoundSummaryCard("Connexion", connectionStatus::get)
         );
         HBox.setHgrow(summaryCards.getChildren().get(0), Priority.ALWAYS);
         HBox.setHgrow(summaryCards.getChildren().get(1), Priority.ALWAYS);
@@ -236,12 +267,25 @@ public class ClientShell {
         pageCopy.setWrapText(true);
         pageCopy.getStyleClass().add("page-copy");
 
+        Button sendOrderButton = new Button("Envoyer la commande");
+        sendOrderButton.getStyleClass().addAll("action-button", "primary-button");
+        sendOrderButton.setOnAction(event -> sendCurrentOrder());
+
+        Label publishStatusLabel = createValueLabel(publishStatus.get(), "status-copy");
+        publishStatusLabel.textProperty().bind(publishStatus);
+
+        Label orderIdLabel = createValueLabel(currentOrderId.get(), "status-copy");
+        orderIdLabel.textProperty().bind(Bindings.concat("Reference : ", currentOrderId));
+
         VBox placeholder = createSectionCard(
                 "Recapitulatif",
                 createContentLabel("Retrouvez ici les paires choisies avant validation."),
-                createValueLabel(orderSummaryText(), "order-summary")
+                createValueLabel(orderSummaryText(), "order-summary"),
+                sendOrderButton,
+                publishStatusLabel,
+                orderIdLabel
         );
-        Label orderSummary = (Label) placeholder.getChildren().get(placeholder.getChildren().size() - 1);
+        Label orderSummary = (Label) placeholder.getChildren().get(2);
         orderSummary.textProperty().bind(Bindings.createStringBinding(this::orderSummaryText, spinnerDependencies()));
 
         return createPage("Commande", pageTitle, pageCopy, placeholder);
@@ -259,8 +303,14 @@ public class ClientShell {
 
         VBox placeholder = createSectionCard(
                 "Suivi",
-                "Les mises a jour de commande apparaitront ici."
+                createContentLabel("Dernier etat de la commande en cours."),
+                createValueLabel(connectionStatus.get(), "status-copy"),
+                createValueLabel(currentOrderId.get(), "status-copy"),
+                createValueLabel(publishStatus.get(), "status-copy")
         );
+        ((Label) placeholder.getChildren().get(2)).textProperty().bind(Bindings.concat("Connexion : ", connectionStatus));
+        ((Label) placeholder.getChildren().get(3)).textProperty().bind(Bindings.concat("Reference : ", currentOrderId));
+        ((Label) placeholder.getChildren().get(4)).textProperty().bind(publishStatus);
 
         return createPage("Statut", pageTitle, pageCopy, placeholder);
     }
@@ -433,6 +483,43 @@ public class ClientShell {
 
     private String formatPrice(double price) {
         return String.format("%.2f EUR", price);
+    }
+
+    private void connectToBroker() {
+        try {
+            mqttService.start();
+            publishStatus.set("Connexion prete pour l'envoi");
+        } catch (RuntimeException exception) {
+            connectionStatus.set("Connexion impossible");
+            publishStatus.set("Impossible de joindre le broker");
+        }
+    }
+
+    private void sendCurrentOrder() {
+        Map<TypeLunette, Integer> orderLines = new EnumMap<>(TypeLunette.class);
+
+        for (ProductDefinition product : PRODUCTS) {
+            int quantity = selectedQuantities.get(product.type()).get();
+            if (quantity > 0) {
+                orderLines.put(product.type(), quantity);
+            }
+        }
+
+        if (orderLines.isEmpty()) {
+            publishStatus.set("Selectionnez au moins une paire avant l'envoi");
+            currentOrderId.set("-");
+            return;
+        }
+
+        String orderId = UUID.randomUUID().toString();
+        currentOrderId.set(orderId);
+
+        try {
+            mqttService.sendOrder(orderId, new Commande(orderLines));
+            publishStatus.set("Commande envoyee a l'atelier");
+        } catch (RuntimeException exception) {
+            publishStatus.set("Envoi impossible : " + exception.getMessage());
+        }
     }
 
     private enum ViewKey {

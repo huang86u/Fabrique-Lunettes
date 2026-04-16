@@ -5,10 +5,11 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class App extends Application {
+    private ClientShell clientShell;
 
     @Override
     public void start(Stage stage) {
-        ClientShell clientShell = new ClientShell();
+        clientShell = new ClientShell();
 
         Scene scene = new Scene(clientShell.getRoot(), 1180, 760);
         scene.getStylesheets().add(getClass().getResource("/app.css").toExternalForm());
@@ -18,6 +19,13 @@ public class App extends Application {
         stage.setMinHeight(680);
         stage.setScene(scene);
         stage.show();
+    }
+
+    @Override
+    public void stop() {
+        if (clientShell != null) {
+            clientShell.shutdown();
+        }
     }
 
     public static void main(String[] args) {

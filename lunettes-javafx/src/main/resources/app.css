@@ -177,3 +177,35 @@
     -fx-font-size: 16px;
     -fx-line-spacing: 4px;
 }
+
+.action-button {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 12 16 12 16;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+}
+
+.primary-button {
+    -fx-background-color: #234d7d;
+    -fx-text-fill: #f7fbff;
+}
+
+.primary-button:hover {
+    -fx-background-color: #2c629d;
+}
+
+.status-pill {
+    -fx-background-color: rgba(127, 210, 190, 0.18);
+    -fx-background-radius: 8;
+    -fx-padding: 8 10 8 10;
+    -fx-text-fill: #dff7ef;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+}
+
+.status-copy {
+    -fx-text-fill: #405162;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+}
