@@ -16,7 +16,7 @@
         <repository>
             <id>github-le-prof-de-raizo</id>
             <url>https://maven.pkg.github.com/le-prof-de-raizo/repo-maven</url>
-            </repository>
+        </repository>
     </repositories>
 
     <dependencies>
