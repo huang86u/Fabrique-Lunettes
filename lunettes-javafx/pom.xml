@@ -20,7 +20,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>fr.miage</groupId>
+            <groupId>com.github.huang86u</groupId>
             <artifactId>lunettes-shared</artifactId>
             <version>${project.version}</version>
         </dependency>
