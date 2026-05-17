@@ -69,15 +69,16 @@ public final class FrontendMqttService implements AutoCloseable {
             Commande commande,
             Runnable onValidated,
             Consumer<String> onCancelled,
-            Consumer<String> onSerials,
-            Consumer<String> onShipped
+            Consumer<String> onStatus,
+            Consumer<String> onDelivery,
+            Consumer<String> onError
     ) {
         if (client == null || !client.isConnected()) {
             throw new IllegalStateException("Le client MQTT n'est pas connecte");
         }
 
         try {
-            subscribeToOrderUpdates(orderId, onValidated, onCancelled, onSerials, onShipped);
+            subscribeToOrderUpdates(orderId, onValidated, onCancelled, onStatus, onDelivery, onError);
 
             String payload = FormatteurMessage.encoder(commande);
             MqttMessage message = new MqttMessage(payload.getBytes(StandardCharsets.UTF_8));
@@ -86,6 +87,27 @@ public final class FrontendMqttService implements AutoCloseable {
         } catch (MqttException exception) {
             clearOrderTracking(orderId);
             throw new IllegalStateException("Impossible d'envoyer la commande", exception);
+        }
+    }
+
+    public void checkSerial(String serial, Consumer<String> onResponse) {
+        if (client == null || !client.isConnected()) {
+            throw new IllegalStateException("Le client MQTT n'est pas connecte");
+        }
+
+        try {
+            String responseTopic = serialResponseTopic(serial);
+            subscribeToTopic(responseTopic, payload -> {
+                onResponse.accept(payload);
+                unsubscribe(responseTopic);
+            });
+
+            MqttMessage message = new MqttMessage(new byte[0]);
+            message.setQos(1);
+            client.publish(serialCheckTopic(serial), message).waitForCompletion();
+        } catch (MqttException exception) {
+            unsubscribe(serialResponseTopic(serial));
+            throw new IllegalStateException("Impossible de verifier le numero de serie", exception);
         }
     }
 
@@ -131,7 +153,7 @@ public final class FrontendMqttService implements AutoCloseable {
             String payload = new String(message.getPayload(), StandardCharsets.UTF_8);
             handler.accept(payload);
 
-            if (topic.endsWith("/cancelled") || topic.endsWith("/shipped")) {
+            if (topic.endsWith("/cancelled") || topic.endsWith("/delivery") || topic.endsWith("/error")) {
                 clearOrderTracking(extractOrderId(topic));
             }
         }
@@ -154,14 +176,16 @@ public final class FrontendMqttService implements AutoCloseable {
             String orderId,
             Runnable onValidated,
             Consumer<String> onCancelled,
-            Consumer<String> onSerials,
-            Consumer<String> onShipped
+            Consumer<String> onStatus,
+            Consumer<String> onDelivery,
+            Consumer<String> onError
     )
             throws MqttException {
         subscribeToTopic(validatedTopic(orderId), ignoredPayload -> onValidated.run());
         subscribeToTopic(cancelledTopic(orderId), onCancelled);
-        subscribeToTopic(serialsTopic(orderId), onSerials);
-        subscribeToTopic(shippedTopic(orderId), onShipped);
+        subscribeToTopic(statusTopic(orderId), onStatus);
+        subscribeToTopic(deliveryTopic(orderId), onDelivery);
+        subscribeToTopic(errorTopic(orderId), onError);
     }
 
     private void subscribeToTopic(String topic, Consumer<String> handler) throws MqttException {
@@ -186,8 +210,9 @@ public final class FrontendMqttService implements AutoCloseable {
     private void clearOrderTracking(String orderId) {
         unsubscribe(validatedTopic(orderId));
         unsubscribe(cancelledTopic(orderId));
-        unsubscribe(serialsTopic(orderId));
-        unsubscribe(shippedTopic(orderId));
+        unsubscribe(statusTopic(orderId));
+        unsubscribe(deliveryTopic(orderId));
+        unsubscribe(errorTopic(orderId));
     }
 
     private void unsubscribe(String topic) {
@@ -254,11 +279,23 @@ public final class FrontendMqttService implements AutoCloseable {
         return "orders/" + orderId + "/cancelled";
     }
 
-    private String serialsTopic(String orderId) {
-        return "orders/" + orderId + "/serials";
+    private String statusTopic(String orderId) {
+        return "orders/" + orderId + "/status";
     }
 
-    private String shippedTopic(String orderId) {
-        return "orders/" + orderId + "/shipped";
+    private String deliveryTopic(String orderId) {
+        return "orders/" + orderId + "/delivery";
+    }
+
+    private String errorTopic(String orderId) {
+        return "orders/" + orderId + "/error";
+    }
+
+    private String serialCheckTopic(String serial) {
+        return "serials/" + serial + "/check";
+    }
+
+    private String serialResponseTopic(String serial) {
+        return "serials/" + serial;
     }
 }

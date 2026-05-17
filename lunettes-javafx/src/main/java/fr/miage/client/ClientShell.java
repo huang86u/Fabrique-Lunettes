@@ -321,7 +321,7 @@ public class ClientShell {
         orderButton.getStyleClass().addAll("action-button", "primary-button");
         orderButton.setMaxWidth(Double.MAX_VALUE);
         orderButton.disableProperty().bind(Bindings.createBooleanBinding(
-                () -> !hasSelectedProducts() || !connectionReady.get() || !backendAvailable.get(),
+                () -> !hasSelectedProducts() || !connectionReady.get() || !backendAvailable.get() || orderPending.get(),
                 selectionAndOrderDependencies()
         ));
         orderButton.setOnAction(event -> sendCurrentOrder());
@@ -704,21 +704,20 @@ public class ClientShell {
 
         check.setOnAction(e -> {
             String serial = input.getText() == null ? "" : input.getText().trim();
-            String matchingOrderId = orderSerials.entrySet().stream()
-                    .filter(entry -> entry.getValue().contains(serial))
-                    .map(Map.Entry::getKey)
-                    .findFirst()
-                    .orElse(null);
-
-            if (matchingOrderId == null) {
-                serialCheckMessage.set("Numéro inconnu — ce numéro n'a pas été reçu par ce client.");
-            } else {
-                OrderHistoryEntry entry = findOrderHistoryEntry(matchingOrderId);
-                serialCheckMessage.set(entry == null
-                        ? "Numéro validé."
-                        : "Numéro validé — commande " + entry.status().toLowerCase() + ".");
-            }
+            serialCheckMessage.set("Verification en cours...");
             result.setVisible(true);
+
+            try {
+                mqttService.checkSerial(serial, response -> Platform.runLater(() -> {
+                    if (response == null || response.isBlank() || "invalid".equalsIgnoreCase(response.trim())) {
+                        serialCheckMessage.set("Numero invalide.");
+                    } else {
+                        serialCheckMessage.set("Numero valide : " + response.trim() + ".");
+                    }
+                }));
+            } catch (RuntimeException exception) {
+                serialCheckMessage.set("Verification impossible : " + exception.getMessage());
+            }
         });
 
         input.textProperty().addListener((obs, o, n) -> result.setVisible(false));
@@ -1003,8 +1002,9 @@ public class ClientShell {
                     new Commande(orderLines),
                     () -> onOrderValidated(orderId),
                     reason -> onOrderCancelled(orderId, reason),
-                    serials -> onSerialsReceived(orderId, serials),
-                    message -> onOrderShipped(orderId, message)
+                    status -> onOrderStatus(orderId, status),
+                    delivery -> onDeliveryReceived(orderId, delivery),
+                    error -> onOrderError(orderId, error)
             );
             orderPending.set(true);
             orderStatus.set("En attente de validation");
@@ -1021,23 +1021,34 @@ public class ClientShell {
         }
     }
 
-    private void onSerialsReceived(String orderId, String payload) {
+    private void onDeliveryReceived(String orderId, String payload) {
         Platform.runLater(() -> {
             List<String> serials = Arrays.stream(payload.split(","))
                     .map(String::trim)
+                    .map(this::extractSerialFromDeliveryLine)
                     .filter(serial -> !serial.isBlank())
                     .toList();
             orderSerials.put(orderId, serials);
-            updateOrderHistory(orderId, "Fabrication terminée", serials.size() + " numéro(s) de série reçu(s)");
+            updateOrderHistory(orderId, "Commande expediée", serials.size() + " numéro(s) de série reçu(s)");
 
             if (orderId.equals(currentOrderId.get())) {
-                orderStatus.set("Fabrication terminée");
+                orderPending.set(false);
+                orderStatus.set("Commande expediée");
                 publishStatus.set(serials.size() + " numéro(s) de série reçus");
-                shipmentStatus.set("Préparation de l'expedition");
+                shipmentStatus.set("Livraison recue");
+                showNotification("La commande a ete livree", true);
             }
 
             refreshSerialsView();
         });
+    }
+
+    private String extractSerialFromDeliveryLine(String deliveryLine) {
+        int separatorIndex = deliveryLine.indexOf(':');
+        if (separatorIndex < 0 || separatorIndex == deliveryLine.length() - 1) {
+            return deliveryLine;
+        }
+        return deliveryLine.substring(separatorIndex + 1).trim();
     }
 
     private void onOrderValidated(String orderId) {
@@ -1045,7 +1056,6 @@ public class ClientShell {
             updateOrderHistory(orderId, "Commande validée", "Commande acceptée par l'atelier");
 
             if (orderId.equals(currentOrderId.get())) {
-                orderPending.set(false);
                 orderStatus.set("Commande validée");
                 publishStatus.set("Commande acceptée par l'atelier");
                 shipmentStatus.set("Expedition en attente de fabrication");
@@ -1072,19 +1082,39 @@ public class ClientShell {
         });
     }
 
-    private void onOrderShipped(String orderId, String payload) {
+    private void onOrderStatus(String orderId, String status) {
         Platform.runLater(() -> {
-            String detail = payload == null || payload.isBlank()
-                    ? "Expedition confirmée"
-                    : payload;
+            String normalizedStatus = status == null ? "" : status.trim();
+            String detail = switch (normalizedStatus) {
+                case "processing" -> "Fabrication demarree";
+                case "processed" -> "Fabrication terminee";
+                default -> "Statut recu : " + normalizedStatus;
+            };
 
-            updateOrderHistory(orderId, "Commande expediée", detail);
+            updateOrderHistory(orderId, detail, detail);
 
             if (orderId.equals(currentOrderId.get())) {
-                orderStatus.set("Commande expediée");
-                publishStatus.set("Commande remise au transport");
+                orderStatus.set(detail);
+                publishStatus.set(detail);
                 shipmentStatus.set(detail);
-                showNotification("La commande a été expédiée : " + detail, true);
+            }
+        });
+    }
+
+    private void onOrderError(String orderId, String payload) {
+        Platform.runLater(() -> {
+            String detail = payload == null || payload.isBlank()
+                    ? "Erreur pendant le traitement de la commande"
+                    : payload;
+
+            updateOrderHistory(orderId, "Erreur commande", detail);
+
+            if (orderId.equals(currentOrderId.get())) {
+                orderPending.set(false);
+                orderStatus.set("Erreur commande");
+                publishStatus.set(detail);
+                shipmentStatus.set("Aucune livraison");
+                showNotification("Erreur commande : " + detail, false);
             }
         });
     }

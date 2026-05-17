@@ -20,12 +20,12 @@ public class Usine {
         return produire(convertirCommande(commande));
     }
 
-    private List<Fabricateur.Lunette> produire(Map<Fabricateur.TypeLunette, Integer> typesLunettes) {
+    public synchronized List<Fabricateur.Lunette> produire(final Map<Fabricateur.TypeLunette, Integer> typesLunettes) {
         List<Fabricateur.Lunette> resultat = new ArrayList<>();
 
-        for (Map.Entry<Fabricateur.TypeLunette, Integer> entry : typesLunettes.entrySet()) {
-            Fabricateur.TypeLunette type = entry.getKey();
-            int quantite = entry.getValue();
+        for (Map.Entry<Fabricateur.TypeLunette, Integer> ligneCommande : typesLunettes.entrySet()) {
+            Fabricateur.TypeLunette type = ligneCommande.getKey();
+            int quantite = ligneCommande.getValue();
 
             while (quantite > 0) {
                 int capacite = Math.max(1, fabricateur.getCapacity());

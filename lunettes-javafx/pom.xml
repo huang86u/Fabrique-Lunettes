@@ -41,11 +41,6 @@
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-        <dependency>
-            <groupId>bernard-flou</groupId>
-            <artifactId>fabricateur</artifactId>
-            <version>0.0.1</version>
-        </dependency>
     </dependencies>
 
     <build>

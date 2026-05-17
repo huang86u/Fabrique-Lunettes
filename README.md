@@ -39,3 +39,50 @@ Ce projet dépend d'une librairie privée hébergée sur GitHub (`fabricateur`).
         </server>
     </servers>
 </settings>
+```
+
+## Protocole MQTT
+
+Le format de commande est un format texte maison :
+
+```text
+TYPE:QUANTITE,TYPE:QUANTITE
+```
+
+Exemple :
+
+```text
+BANANA:2,CLAUDE:1
+```
+
+Le format de livraison est aussi un format texte maison :
+
+```text
+TYPE:NUMERO_SERIE,TYPE:NUMERO_SERIE
+```
+
+Exemple :
+
+```text
+BANANA:SN123,CLAUDE:SN456
+```
+
+Topics utilises :
+
+```text
+orders/{idCommande}
+orders/{idCommande}/validated
+orders/{idCommande}/cancelled
+orders/{idCommande}/status
+orders/{idCommande}/delivery
+orders/{idCommande}/error
+serials/{numeroSerie}/check
+serials/{numeroSerie}
+```
+
+Statuts possibles :
+
+```text
+processing
+processed
+```
