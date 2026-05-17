@@ -8,6 +8,7 @@ import fr.miage.shared.TypeLunette;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -18,6 +19,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 public class MqttServer implements MqttCallback {
     private final Usine usine = new Usine();
+    private final Map<String, String> registreNumerosSerie = new ConcurrentHashMap<>();
     private MqttClient client;
 
     public void start(String brokerUrl, String clientId) {
@@ -35,6 +37,8 @@ public class MqttServer implements MqttCallback {
 
             client.subscribe("orders/+");
             System.out.println("Abonne au topic : 'orders/+'...");
+            client.subscribe("serials/+/check");
+            System.out.println("Abonne au topic : 'serials/+/check'...");
             client.subscribe("backend/ping");
             System.out.println("Abonne au topic : 'backend/ping'...");
         } catch (MqttException exception) {
@@ -70,9 +74,22 @@ public class MqttServer implements MqttCallback {
             return;
         }
 
-        if (topic.startsWith("orders/") && topic.split("/").length == 2) {
-            String orderId = topic.split("/")[1];
-            traiterCommande(orderId, payload);
+        String[] morceauxTopic = topic.split("/");
+
+        if (morceauxTopic.length == 2 && "orders".equals(morceauxTopic[0])) {
+            String orderId = morceauxTopic[1];
+            Thread threadCommande = new Thread(
+                    () -> traiterCommande(orderId, payload),
+                    "commande-" + orderId
+            );
+            threadCommande.start();
+            return;
+        }
+
+        if (morceauxTopic.length == 3
+                && "serials".equals(morceauxTopic[0])
+                && "check".equals(morceauxTopic[2])) {
+            verifierNumeroSerie(morceauxTopic[1]);
         }
     }
 
@@ -88,7 +105,7 @@ public class MqttServer implements MqttCallback {
 
         System.out.println("Commande " + orderId + " validee !");
         publierMessage(validatedTopic(orderId), "");
-        produireEtExpedier(orderId, commande);
+        produireEtLivrer(orderId, commande);
     }
 
     private boolean validerCommande(Commande commande) {
@@ -111,34 +128,46 @@ public class MqttServer implements MqttCallback {
         return true;
     }
 
-    private void produireEtExpedier(String orderId, Commande commande) {
+    private void produireEtLivrer(String orderId, Commande commande) {
         try {
-            List<Fabricateur.Lunette> lunettes = usine.produire(commande);
-            List<String> serials = extraireNumerosSerie(lunettes);
-            publierMessage(serialsTopic(orderId), String.join(",", serials));
-            publierMessage(shippedTopic(orderId), construireMessageExpedition(orderId, lunettes.size()));
+            List<Fabricateur.Lunette> lunettes;
+            synchronized (usine) {
+                publierMessage(statusTopic(orderId), "processing");
+                lunettes = usine.produire(commande);
+            }
+            enregistrerNumerosSerie(lunettes);
+            publierMessage(statusTopic(orderId), "processed");
+            publierMessage(deliveryTopic(orderId), construireMessageLivraison(lunettes));
         } catch (RuntimeException exception) {
-            publierMessage(cancelledTopic(orderId), "Fabrication interrompue : " + exception.getMessage());
+            publierMessage(errorTopic(orderId), "Fabrication interrompue : " + exception.getMessage());
         }
     }
 
-    private List<String> extraireNumerosSerie(List<Fabricateur.Lunette> lunettes) {
-        List<String> serials = new ArrayList<>();
+    private void enregistrerNumerosSerie(List<Fabricateur.Lunette> lunettes) {
         for (Fabricateur.Lunette lunette : lunettes) {
-            serials.add(lunette.serial);
+            registreNumerosSerie.put(lunette.serial, lunette.type.name());
         }
-        return serials;
     }
 
-    private String construireMessageExpedition(String orderId, int quantite) {
-        String prefix = orderId.length() >= 8 ? orderId.substring(0, 8).toUpperCase() : orderId.toUpperCase();
-        return "Expedition confirmee : " + quantite + " paire(s) - ref EXP-" + prefix;
+    private String construireMessageLivraison(List<Fabricateur.Lunette> lunettes) {
+        List<String> lignes = new ArrayList<>();
+        for (Fabricateur.Lunette lunette : lunettes) {
+            lignes.add(lunette.type.name() + ":" + lunette.serial);
+        }
+        return String.join(",", lignes);
+    }
+
+    private void verifierNumeroSerie(String numeroSerie) {
+        String type = registreNumerosSerie.getOrDefault(numeroSerie, "invalid");
+        publierMessage(serialResponseTopic(numeroSerie), type);
     }
 
     private String validatedTopic(String orderId) { return "orders/" + orderId + "/validated"; }
     private String cancelledTopic(String orderId) { return "orders/" + orderId + "/cancelled"; }
-    private String serialsTopic(String orderId) { return "orders/" + orderId + "/serials"; }
-    private String shippedTopic(String orderId) { return "orders/" + orderId + "/shipped"; }
+    private String statusTopic(String orderId) { return "orders/" + orderId + "/status"; }
+    private String deliveryTopic(String orderId) { return "orders/" + orderId + "/delivery"; }
+    private String errorTopic(String orderId) { return "orders/" + orderId + "/error"; }
+    private String serialResponseTopic(String numeroSerie) { return "serials/" + numeroSerie; }
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
