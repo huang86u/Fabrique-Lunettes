@@ -2,3 +2,4 @@
 .m2/
 target/
 *.iml
+.vscode/
