@@ -59,21 +59,21 @@ public class ClientShell {
                     "BlaBlaBla",
                     74.99,
                     "",
-                    "Lunettes style aviateur avec verres polarises et monture en metal dore."
+                    "Lunettes style aviateur avec verres polarises et monture en métal doré."
             ),
             new ProductDefinition(
                     TypeLunette.LE_CHAT,
                     "Miaousse",
                     129.99,
                     "-10%",
-                    "Lunettes de vue sophistiquees avec monture fine et design contemporain."
+                    "Lunettes de vue sophistiquées avec monture fine et design contemporain."
             ),
             new ProductDefinition(
                     TypeLunette.CLAUDE,
                     "Claude",
                     99.99,
                     "Bestseller",
-                    "Monture ultra-legere et resistante, ideale pour les activites sportives."
+                    "Monture ultra-legere et resistante, ideale pour les activités sportives."
             )
     );
 
@@ -83,9 +83,9 @@ public class ClientShell {
     private final List<OrderHistoryEntry> orderHistory = new ArrayList<>();
     private final Map<TypeLunette, IntegerProperty> selectedQuantities = new EnumMap<>(TypeLunette.class);
     private final StringProperty connectionStatus = new SimpleStringProperty("Connexion en cours...");
-    private final StringProperty backendStatus = new SimpleStringProperty("Backend en cours de verification...");
+    private final StringProperty backendStatus = new SimpleStringProperty("Backend en cours de vérification...");
     private final StringProperty orderStatus = new SimpleStringProperty("Aucune commande en attente");
-    private final StringProperty publishStatus = new SimpleStringProperty("Aucune commande envoyee");
+    private final StringProperty publishStatus = new SimpleStringProperty("Aucune commande envoyée");
     private final StringProperty shipmentStatus = new SimpleStringProperty("Aucune expedition suivie");
     private final StringProperty currentOrderId = new SimpleStringProperty("-");
     private final BooleanProperty connectionReady = new SimpleBooleanProperty(false);
@@ -104,7 +104,7 @@ public class ClientShell {
     private Node serialsView;
     private Node verifyView;
     private VBox serialItems;
-    private final StringProperty serialCheckMessage = new SimpleStringProperty("Entrez un numero de serie pour le verifier.");
+    private final StringProperty serialCheckMessage = new SimpleStringProperty("Entrez un numéro de série pour le vérifier.");
     private final Map<String, List<String>> orderSerials = new LinkedHashMap<>();
 
     public ClientShell() {
@@ -144,7 +144,7 @@ public class ClientShell {
         title.getStyleClass().add("sidebar-title");
 
         Label subtitle = new Label(
-                "Retrouvez les collections, preparez votre commande et consultez son suivi au meme endroit."
+                "Retrouvez les collections, préparez votre commande et consultez son suivi au même endroit."
         );
         subtitle.setWrapText(true);
         subtitle.getStyleClass().add("sidebar-copy");
@@ -188,10 +188,12 @@ public class ClientShell {
         VBox sidebar = new VBox(20, brandBlock, connectionBlock, navigationBlock, spacer);
         sidebar.setPadding(new Insets(24, 20, 24, 20));
         sidebar.setPrefWidth(280);
+        sidebar.setPrefHeight(Double.MAX_VALUE);
         sidebar.getStyleClass().add("sidebar");
 
         ScrollPane sidebarScroll = new ScrollPane(sidebar);
         sidebarScroll.setFitToWidth(true);
+        sidebarScroll.setFitToHeight(true);
         sidebarScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         sidebarScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         sidebarScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
@@ -242,7 +244,7 @@ public class ClientShell {
         Label pageTitle = new Label("Fabrique de Lunettes");
         pageTitle.getStyleClass().add("page-title");
 
-        Label pageCopy = new Label("Commandez vos lunettes, suivez leur fabrication et recevez vos numeros de serie en temps reel.");
+        Label pageCopy = new Label("Commandez vos lunettes, suivez leur fabrication et recevez vos numéros de série en temps réel.");
         pageCopy.setWrapText(true);
         pageCopy.getStyleClass().add("page-copy");
 
@@ -250,7 +252,7 @@ public class ClientShell {
         hero.getStyleClass().add("section-card");
         hero.setPadding(new Insets(24, 28, 24, 28));
 
-        VBox catalogCard = createSummaryCard("Catalogue", PRODUCTS.size() + " modeles disponibles");
+        VBox catalogCard = createSummaryCard("Catalogue", PRODUCTS.size() + " modèles disponibles");
 
         Label connValue = new Label();
         connValue.textProperty().bind(connectionStatus);
@@ -279,7 +281,7 @@ public class ClientShell {
         btnCatalogue.setMaxWidth(Double.MAX_VALUE);
         btnCatalogue.setOnAction(e -> showView(ViewKey.CATALOGUE, navigationButtons.get(1)));
 
-        Button btnSerials = new Button("≡  Mes numeros de serie");
+        Button btnSerials = new Button("≡  Mes numéros de série");
         btnSerials.getStyleClass().addAll("action-button", "outline-button");
         btnSerials.setMaxWidth(Double.MAX_VALUE);
         btnSerials.setOnAction(e -> showView(ViewKey.SERIALS, navigationButtons.get(4)));
@@ -295,7 +297,7 @@ public class ClientShell {
         Label pageTitle = new Label("Catalogue");
         pageTitle.getStyleClass().add("page-title");
 
-        Label pageCopy = new Label("Choisissez vos modeles et composez votre commande.");
+        Label pageCopy = new Label("Choisissez vos modèles et composez votre commande.");
         pageCopy.setWrapText(true);
         pageCopy.getStyleClass().add("page-copy");
 
@@ -342,7 +344,7 @@ public class ClientShell {
         emptyIcon.setStyle("-fx-font-size: 40px;");
         Label emptyTitle = new Label("Aucune commande en cours");
         emptyTitle.getStyleClass().add("section-title");
-        Label emptyMsg = createContentLabel("Parcourez le catalogue et passez votre premiere commande.");
+        Label emptyMsg = createContentLabel("Parcourez le catalogue et passez votre première commande.");
         Button goToCatalogue = new Button("◉  Parcourir le catalogue");
         goToCatalogue.getStyleClass().addAll("action-button", "primary-button");
         goToCatalogue.setOnAction(e -> showView(ViewKey.CATALOGUE, navigationButtons.get(1)));
@@ -657,10 +659,10 @@ public class ClientShell {
     }
 
     private ScrollPane createSerialsView() {
-        Label pageTitle = new Label("Numeros de serie");
+        Label pageTitle = new Label("Numéros de série");
         pageTitle.getStyleClass().add("page-title");
 
-        Label pageCopy = new Label("Numeros de serie recus pour chaque commande fabriquee.");
+        Label pageCopy = new Label("Numéros de série recus pour chaque commande fabriquée.");
         pageCopy.setWrapText(true);
         pageCopy.getStyleClass().add("page-copy");
 
@@ -674,10 +676,10 @@ public class ClientShell {
     }
 
     private ScrollPane createVerifyView() {
-        Label pageTitle = new Label("Verifier un numero");
+        Label pageTitle = new Label("Verifier un numéro");
         pageTitle.getStyleClass().add("page-title");
 
-        Label pageCopy = new Label("Saisissez un numero de serie pour verifier s'il a ete fabrique.");
+        Label pageCopy = new Label("Saisissez un numéro de série pour vérifier s'il a été fabriqué.");
         pageCopy.setWrapText(true);
         pageCopy.getStyleClass().add("page-copy");
 
@@ -692,7 +694,7 @@ public class ClientShell {
         result.setVisible(false);
         result.managedProperty().bind(result.visibleProperty());
 
-        Button check = new Button("✓  Verifier");
+        Button check = new Button("✓  Vérifier");
         check.getStyleClass().addAll("action-button", "primary-button");
         check.setMaxWidth(Double.MAX_VALUE);
         check.disableProperty().bind(Bindings.createBooleanBinding(
@@ -709,21 +711,21 @@ public class ClientShell {
                     .orElse(null);
 
             if (matchingOrderId == null) {
-                serialCheckMessage.set("Numero inconnu — ce numero n'a pas ete recu par ce client.");
+                serialCheckMessage.set("Numéro inconnu — ce numéro n'a pas été reçu par ce client.");
             } else {
                 OrderHistoryEntry entry = findOrderHistoryEntry(matchingOrderId);
                 serialCheckMessage.set(entry == null
-                        ? "Numero valide."
-                        : "Numero valide — commande " + entry.status().toLowerCase() + ".");
+                        ? "Numéro validé."
+                        : "Numéro validé — commande " + entry.status().toLowerCase() + ".");
             }
             result.setVisible(true);
         });
 
         input.textProperty().addListener((obs, o, n) -> result.setVisible(false));
 
-        VBox verificationCard = createSectionCard("Verification", input, check, result);
+        VBox verificationCard = createSectionCard("Vérification", input, check, result);
 
-        return createPage("Verifier", pageTitle, pageCopy, verificationCard);
+        return createPage("Vérifier", pageTitle, pageCopy, verificationCard);
     }
 
     private Node createStatusTimeline() {
@@ -860,7 +862,7 @@ public class ClientShell {
         }
 
         if (total == 0) {
-            return "Aucune paire selectionnee";
+            return "Aucune paire selectionnée";
         }
 
         return total + " paire(s) choisie(s) : " + String.join(", ", selections);
@@ -892,7 +894,7 @@ public class ClientShell {
         }
 
         if (builder.isEmpty()) {
-            return "Aucune paire n'a encore ete ajoutee a la commande.";
+            return "Aucune paire n'a encore été ajoutée à la commande.";
         }
 
         builder.append("\n\nTotal estime : ").append(formatPrice(totalPrice));
@@ -909,7 +911,7 @@ public class ClientShell {
             }
         }
 
-        return lines.isEmpty() ? "Aucune paire selectionnee" : String.join(", ", lines);
+        return lines.isEmpty() ? "Aucune paire selectionnée" : String.join(", ", lines);
     }
 
     private String formatPrice(double price) {
@@ -965,10 +967,10 @@ public class ClientShell {
         if (orderLines.isEmpty()) {
             orderPending.set(false);
             orderStatus.set("Aucune commande en attente");
-            publishStatus.set("Selectionnez au moins une paire avant l'envoi");
+            publishStatus.set("Sélectionnez au moins une paire avant l'envoi");
             shipmentStatus.set("Aucune expedition suivie");
             currentOrderId.set("-");
-            showNotification("Selectionnez une paire avant de commander", false);
+            showNotification("Sélectionnez une paire avant de commander", false);
             return;
         }
 
@@ -976,7 +978,7 @@ public class ClientShell {
             orderPending.set(false);
             orderStatus.set("Pas de connexion au broker");
             publishStatus.set("Impossible d'envoyer sans broker");
-            shipmentStatus.set("Aucune expedition lancee");
+            shipmentStatus.set("Aucune expedition lancée");
             showNotification("Connexion MQTT hors ligne, impossible d'envoyer la commande", false);
             return;
         }
@@ -987,7 +989,7 @@ public class ClientShell {
             orderPending.set(false);
             orderStatus.set("Backend non disponible");
             publishStatus.set("Impossible d'envoyer : backend absent");
-            shipmentStatus.set("Aucune expedition lancee");
+            shipmentStatus.set("Aucune expedition lancée");
             showNotification("Backend indisponible, activez le backend avant d'envoyer la commande", false);
             return;
         }
@@ -1006,15 +1008,15 @@ public class ClientShell {
             );
             orderPending.set(true);
             orderStatus.set("En attente de validation");
-            publishStatus.set("Commande envoyee a l'atelier");
+            publishStatus.set("Commande envoyée a l'atelier");
             shipmentStatus.set("Expedition en attente");
             recordOrderHistory(orderId, compactOrderSummary(orderLines), "En attente de validation", "Commande envoyee a l'atelier");
-            showNotification("Commande envoyee, attente de validation", true);
+            showNotification("Commande envoyée, attente de validation", true);
         } catch (RuntimeException exception) {
             orderPending.set(false);
-            orderStatus.set("Envoi non confirme");
+            orderStatus.set("Envoi non confirmé");
             publishStatus.set("Envoi impossible : " + exception.getMessage());
-            shipmentStatus.set("Expedition non lancee");
+            shipmentStatus.set("Expedition non lancée");
             showNotification("Echec de l'envoi : " + exception.getMessage(), false);
         }
     }
@@ -1026,12 +1028,12 @@ public class ClientShell {
                     .filter(serial -> !serial.isBlank())
                     .toList();
             orderSerials.put(orderId, serials);
-            updateOrderHistory(orderId, "Fabrication terminee", serials.size() + " numero(s) de serie recu(s)");
+            updateOrderHistory(orderId, "Fabrication terminée", serials.size() + " numero(s) de serie recu(s)");
 
             if (orderId.equals(currentOrderId.get())) {
-                orderStatus.set("Fabrication terminee");
-                publishStatus.set(serials.size() + " numero(s) de serie recus");
-                shipmentStatus.set("Preparation de l'expedition");
+                orderStatus.set("Fabrication terminée");
+                publishStatus.set(serials.size() + " numéro(s) de série reçus");
+                shipmentStatus.set("Préparation de l'expedition");
             }
 
             refreshSerialsView();
@@ -1040,14 +1042,14 @@ public class ClientShell {
 
     private void onOrderValidated(String orderId) {
         Platform.runLater(() -> {
-            updateOrderHistory(orderId, "Commande validee", "Commande acceptee par l'atelier");
+            updateOrderHistory(orderId, "Commande validée", "Commande acceptée par l'atelier");
 
             if (orderId.equals(currentOrderId.get())) {
                 orderPending.set(false);
-                orderStatus.set("Commande validee");
-                publishStatus.set("Commande acceptee par l'atelier");
+                orderStatus.set("Commande validée");
+                publishStatus.set("Commande acceptée par l'atelier");
                 shipmentStatus.set("Expedition en attente de fabrication");
-                showNotification("La commande a ete validee par l'atelier", true);
+                showNotification("La commande a ete validée par l'atelier", true);
             }
         });
     }
@@ -1055,17 +1057,17 @@ public class ClientShell {
     private void onOrderCancelled(String orderId, String reason) {
         Platform.runLater(() -> {
             String detail = reason == null || reason.isBlank()
-                    ? "Commande annulee par l'atelier"
+                    ? "Commande annulée par l'atelier"
                     : reason;
 
-            updateOrderHistory(orderId, "Commande annulee", detail);
+            updateOrderHistory(orderId, "Commande annulée", detail);
 
             if (orderId.equals(currentOrderId.get())) {
                 orderPending.set(false);
-                orderStatus.set("Commande annulee");
+                orderStatus.set("Commande annulée");
                 publishStatus.set(detail);
-                shipmentStatus.set("Aucune expedition lancee");
-                showNotification("La commande a ete annulee : " + detail, false);
+                shipmentStatus.set("Aucune expedition lancée");
+                showNotification("La commande a été annulée : " + detail, false);
             }
         });
     }
@@ -1073,13 +1075,13 @@ public class ClientShell {
     private void onOrderShipped(String orderId, String payload) {
         Platform.runLater(() -> {
             String detail = payload == null || payload.isBlank()
-                    ? "Expedition confirmee"
+                    ? "Expedition confirmée"
                     : payload;
 
-            updateOrderHistory(orderId, "Commande expediee", detail);
+            updateOrderHistory(orderId, "Commande expediée", detail);
 
             if (orderId.equals(currentOrderId.get())) {
-                orderStatus.set("Commande expediee");
+                orderStatus.set("Commande expediée");
                 publishStatus.set("Commande remise au transport");
                 shipmentStatus.set(detail);
                 showNotification("La commande a été expédiée : " + detail, true);
@@ -1123,7 +1125,7 @@ public class ClientShell {
         }
 
         if (orderHistory.isEmpty()) {
-            historyItems.getChildren().setAll(createContentLabel("Aucune commande enregistree pour le moment."));
+            historyItems.getChildren().setAll(createContentLabel("Aucune commande enregistrée pour le moment."));
             return;
         }
 
@@ -1178,11 +1180,11 @@ public class ClientShell {
         serialValues.getStyleClass().add("serial-values");
 
         if (serials.isEmpty()) {
-            Label emptyLabel = createContentLabel("Aucun numero recu pour cette commande.");
+            Label emptyLabel = createContentLabel("Aucun numéro reçu pour cette commande.");
             emptyLabel.getStyleClass().add("serial-empty");
             serialValues.getChildren().add(emptyLabel);
         } else {
-            Label countLabel = new Label(serials.size() + " numero(s) de serie recu(s)");
+            Label countLabel = new Label(serials.size() + " numéro(s) de série reçu(s)");
             countLabel.getStyleClass().add("serials-count-label");
             serialValues.getChildren().add(countLabel);
             for (String serial : serials) {
