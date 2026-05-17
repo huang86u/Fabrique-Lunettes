@@ -59,7 +59,7 @@ public class ClientShell {
                     "BlaBlaBla",
                     74.99,
                     "",
-                    "Lunettes style aviateur avec verres polarises et monture en métal doré."
+                    "Lunettes style aviateur avec verres polarisés et monture en métal doré."
             ),
             new ProductDefinition(
                     TypeLunette.LE_CHAT,
@@ -73,7 +73,7 @@ public class ClientShell {
                     "Claude",
                     99.99,
                     "Bestseller",
-                    "Monture ultra-legere et resistante, ideale pour les activités sportives."
+                    "Monture ultra-légère et résistante, idéale pour les activités sportives."
             )
     );
 
@@ -86,7 +86,7 @@ public class ClientShell {
     private final StringProperty backendStatus = new SimpleStringProperty("Backend en cours de vérification...");
     private final StringProperty orderStatus = new SimpleStringProperty("Aucune commande en attente");
     private final StringProperty publishStatus = new SimpleStringProperty("Aucune commande envoyée");
-    private final StringProperty shipmentStatus = new SimpleStringProperty("Aucune expedition suivie");
+    private final StringProperty shipmentStatus = new SimpleStringProperty("Aucune expédition suivie");
     private final StringProperty currentOrderId = new SimpleStringProperty("-");
     private final BooleanProperty connectionReady = new SimpleBooleanProperty(false);
     private final BooleanProperty backendAvailable = new SimpleBooleanProperty(false);
@@ -177,7 +177,7 @@ public class ClientShell {
         Button orderButton = createNavButton("□  Commande", ViewKey.ORDER);
         Button statusButton = createNavButton("◈  Statut", ViewKey.STATUS);
         Button serialsButton = createNavButton("≡  Numeros", ViewKey.SERIALS);
-        Button verifyButton = createNavButton("✓  Verifier", ViewKey.VERIFY);
+        Button verifyButton = createNavButton("✓  Vérifier", ViewKey.VERIFY);
 
         VBox navigationBlock = new VBox(10, homeButton, catalogueButton, orderButton, statusButton, serialsButton, verifyButton);
         navigationBlock.getStyleClass().add("sidebar-section");
@@ -384,7 +384,7 @@ public class ClientShell {
         Label pageTitle = new Label("Statut");
         pageTitle.getStyleClass().add("page-title");
 
-        Label pageCopy = new Label("Etat de la connexion et historique des commandes.");
+        Label pageCopy = new Label("État de la connexion et historique des commandes.");
         pageCopy.setWrapText(true);
         pageCopy.getStyleClass().add("page-copy");
 
@@ -503,7 +503,7 @@ public class ClientShell {
 
         Spinner<Integer> quantitySpinner = createQuantitySpinner(product.type());
 
-        Label quantityLabel = new Label("Quantite");
+        Label quantityLabel = new Label("Quantité");
         quantityLabel.getStyleClass().add("field-label");
 
         VBox quantityBox = new VBox(8, quantityLabel, quantitySpinner);
@@ -662,7 +662,7 @@ public class ClientShell {
         Label pageTitle = new Label("Numéros de série");
         pageTitle.getStyleClass().add("page-title");
 
-        Label pageCopy = new Label("Numéros de série recus pour chaque commande fabriquée.");
+        Label pageCopy = new Label("Numéros de série reçus pour chaque commande fabriquée.");
         pageCopy.setWrapText(true);
         pageCopy.getStyleClass().add("page-copy");
 
@@ -676,7 +676,7 @@ public class ClientShell {
     }
 
     private ScrollPane createVerifyView() {
-        Label pageTitle = new Label("Verifier un numéro");
+        Label pageTitle = new Label("Vérifier un numéro");
         pageTitle.getStyleClass().add("page-title");
 
         Label pageCopy = new Label("Saisissez un numéro de série pour vérifier s'il a été fabriqué.");
@@ -821,7 +821,7 @@ public class ClientShell {
         }
 
         if (orderHistory.isEmpty()) {
-            serialItems.getChildren().setAll(createContentLabel("Aucune commande enregistree pour le moment."));
+            serialItems.getChildren().setAll(createContentLabel("Aucune commande enregistrée pour le moment."));
             return;
         }
 
@@ -897,7 +897,7 @@ public class ClientShell {
             return "Aucune paire n'a encore été ajoutée à la commande.";
         }
 
-        builder.append("\n\nTotal estime : ").append(formatPrice(totalPrice));
+        builder.append("\n\nTotal estimé : ").append(formatPrice(totalPrice));
         return builder.toString();
     }
 
@@ -936,10 +936,10 @@ public class ClientShell {
             boolean backendOk = mqttService.pingBackend(2000);
             backendAvailable.set(backendOk);
             backendStatus.set(backendOk ? "Backend disponible" : "Backend indisponible");
-            showNotification(backendOk ? "Connexion et backend verifies" : "Broker connecte, backend indisponible", backendOk);
+            showNotification(backendOk ? "Connexion et backend vérifiés" : "Broker connecte, backend indisponible", backendOk);
 
             if (!orderPending.get()) {
-                publishStatus.set(backendOk ? "Connexion prete pour l'envoi" : "Broker connecte, backend non joignable");
+                publishStatus.set(backendOk ? "Connexion prête pour l'envoi" : "Broker connecte, backend non joignable");
             }
         } catch (RuntimeException exception) {
             connectionReady.set(false);
@@ -968,7 +968,7 @@ public class ClientShell {
             orderPending.set(false);
             orderStatus.set("Aucune commande en attente");
             publishStatus.set("Sélectionnez au moins une paire avant l'envoi");
-            shipmentStatus.set("Aucune expedition suivie");
+            shipmentStatus.set("Aucune expédition suivie");
             currentOrderId.set("-");
             showNotification("Sélectionnez une paire avant de commander", false);
             return;
@@ -978,7 +978,7 @@ public class ClientShell {
             orderPending.set(false);
             orderStatus.set("Pas de connexion au broker");
             publishStatus.set("Impossible d'envoyer sans broker");
-            shipmentStatus.set("Aucune expedition lancée");
+            shipmentStatus.set("Aucune expédition lancée");
             showNotification("Connexion MQTT hors ligne, impossible d'envoyer la commande", false);
             return;
         }
@@ -989,7 +989,7 @@ public class ClientShell {
             orderPending.set(false);
             orderStatus.set("Backend non disponible");
             publishStatus.set("Impossible d'envoyer : backend absent");
-            shipmentStatus.set("Aucune expedition lancée");
+            shipmentStatus.set("Aucune expédition lancée");
             showNotification("Backend indisponible, activez le backend avant d'envoyer la commande", false);
             return;
         }
@@ -1010,14 +1010,14 @@ public class ClientShell {
             orderStatus.set("En attente de validation");
             publishStatus.set("Commande envoyée a l'atelier");
             shipmentStatus.set("Expedition en attente");
-            recordOrderHistory(orderId, compactOrderSummary(orderLines), "En attente de validation", "Commande envoyee a l'atelier");
+            recordOrderHistory(orderId, compactOrderSummary(orderLines), "En attente de validation", "Commande envoyée à l'atelier");
             showNotification("Commande envoyée, attente de validation", true);
         } catch (RuntimeException exception) {
             orderPending.set(false);
             orderStatus.set("Envoi non confirmé");
             publishStatus.set("Envoi impossible : " + exception.getMessage());
             shipmentStatus.set("Expedition non lancée");
-            showNotification("Echec de l'envoi : " + exception.getMessage(), false);
+            showNotification("Échec de l'envoi : " + exception.getMessage(), false);
         }
     }
 
@@ -1028,7 +1028,7 @@ public class ClientShell {
                     .filter(serial -> !serial.isBlank())
                     .toList();
             orderSerials.put(orderId, serials);
-            updateOrderHistory(orderId, "Fabrication terminée", serials.size() + " numero(s) de serie recu(s)");
+            updateOrderHistory(orderId, "Fabrication terminée", serials.size() + " numéro(s) de série reçu(s)");
 
             if (orderId.equals(currentOrderId.get())) {
                 orderStatus.set("Fabrication terminée");
@@ -1066,7 +1066,7 @@ public class ClientShell {
                 orderPending.set(false);
                 orderStatus.set("Commande annulée");
                 publishStatus.set(detail);
-                shipmentStatus.set("Aucune expedition lancée");
+                shipmentStatus.set("Aucune expédition lancée");
                 showNotification("La commande a été annulée : " + detail, false);
             }
         });
