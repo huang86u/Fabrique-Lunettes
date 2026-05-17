@@ -1,0 +1,416 @@
+
+/* ==========================================================================
+   Client Theme - Professional JavaFX UI
+   ========================================================================== */
+
+.root {
+    -fx-font-family: "Segoe UI", "Inter", "Arial";
+    -fx-background-color: #F5F7FB;
+}
+
+/* Sidebar */
+.sidebar {
+    -fx-background-color: linear-gradient(to bottom, #0F172A, #1E293B);
+    -fx-background-radius: 0;
+}
+
+.sidebar-scroll,
+.page-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-color: transparent;
+}
+
+.sidebar-scroll > .viewport,
+.page-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.sidebar-eyebrow {
+    -fx-text-fill: #93C5FD;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-letter-spacing: 1.5px;
+}
+
+.sidebar-title {
+    -fx-text-fill: white;
+    -fx-font-size: 30px;
+    -fx-font-weight: 800;
+}
+
+.sidebar-copy {
+    -fx-text-fill: #CBD5E1;
+    -fx-font-size: 13px;
+    -fx-line-spacing: 2px;
+}
+
+.sidebar-section {
+    -fx-padding: 0 0 12 0;
+}
+
+/* Navigation */
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #CBD5E1;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 12 16;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+}
+
+.nav-button:hover {
+    -fx-background-color: rgba(255,255,255,0.08);
+    -fx-text-fill: white;
+}
+
+.nav-button-active {
+    -fx-background-color: white;
+    -fx-text-fill: #0F172A;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.18), 12, 0.25, 0, 3);
+}
+
+/* Content */
+.content-host {
+    -fx-background-color: #F5F7FB;
+}
+
+.page-content {
+    -fx-background-color: transparent;
+}
+
+.page-label {
+    -fx-text-fill: #64748B;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-letter-spacing: 1px;
+}
+
+.page-title {
+    -fx-text-fill: #0F172A;
+    -fx-font-size: 32px;
+    -fx-font-weight: 800;
+}
+
+.page-copy {
+    -fx-text-fill: #475569;
+    -fx-font-size: 14px;
+    -fx-line-spacing: 2px;
+}
+
+/* Cards */
+.section-card,
+.history-item {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-border-color: #E2E8F0;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 18, 0.18, 0, 6);
+}
+
+.product-card {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-border-color: #E2E8F0;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 18, 0.18, 0, 6);
+    -fx-padding: 0;
+}
+
+.section-title {
+    -fx-text-fill: #0F172A;
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+}
+
+.section-copy,
+.product-description,
+.history-detail,
+.history-summary,
+.serial-empty {
+    -fx-text-fill: #475569;
+    -fx-font-size: 13px;
+    -fx-line-spacing: 2px;
+}
+
+.summary-value,
+.product-price,
+.status-copy,
+.history-reference,
+.history-status,
+.serial-value {
+    -fx-text-fill: #0F172A;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+}
+
+.product-price {
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+}
+
+.product-grid {
+    -fx-padding: 4;
+}
+
+.product-code {
+    -fx-background-color: #EFF6FF;
+    -fx-text-fill: #2563EB;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-padding: 4 8;
+    -fx-background-radius: 999;
+}
+
+.product-badge {
+    -fx-background-color: #DCFCE7;
+    -fx-text-fill: #166534;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-padding: 4 8;
+    -fx-background-radius: 999;
+}
+
+.product-name {
+    -fx-text-fill: #0F172A;
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+}
+
+.field-label {
+    -fx-text-fill: #64748B;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+}
+
+/* Buttons */
+.action-button,
+.primary-button {
+    -fx-background-color: #2563EB;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-padding: 12 18;
+    -fx-background-radius: 12;
+    -fx-cursor: hand;
+}
+
+.action-button:hover,
+.primary-button:hover {
+    -fx-background-color: #1D4ED8;
+}
+
+.action-button:disabled,
+.primary-button:disabled {
+    -fx-background-color: #CBD5E1;
+    -fx-text-fill: #64748B;
+    -fx-opacity: 1;
+}
+
+/* Inputs */
+.text-field,
+.text-area,
+.spinner {
+    -fx-background-color: #F8FAFC;
+    -fx-background-radius: 12;
+    -fx-border-color: #CBD5E1;
+    -fx-border-radius: 12;
+    -fx-padding: 10 12;
+    -fx-font-size: 13px;
+}
+
+.text-field:focused,
+.text-area:focused,
+.spinner:focused {
+    -fx-border-color: #2563EB;
+}
+
+.text-area .content {
+    -fx-background-color: #F8FAFC;
+    -fx-background-radius: 12;
+}
+
+.quantity-spinner {
+    -fx-pref-height: 40;
+}
+
+/* Notifications */
+.notification-banner {
+    -fx-padding: 12 16;
+    -fx-background-radius: 12;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+}
+
+.notification-success {
+    -fx-background-color: #DCFCE7;
+    -fx-text-fill: #166534;
+}
+
+.notification-error {
+    -fx-background-color: #FEE2E2;
+    -fx-text-fill: #991B1B;
+}
+
+/* Lists */
+.history-list,
+.serial-list,
+.serial-values {
+    -fx-spacing: 10;
+}
+
+/* Scroll bars */
+.scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #CBD5E1;
+    -fx-background-radius: 999;
+}
+
+/* ── Connection status dot ───────────────────────────────────── */
+.status-dot-connected {
+    -fx-text-fill: #22C55E;
+    -fx-font-size: 11px;
+}
+
+.status-dot-disconnected {
+    -fx-text-fill: #EF4444;
+    -fx-font-size: 11px;
+}
+
+/* ── Product icon badge ──────────────────────────────────────── */
+.product-icon-badge {
+    -fx-font-size: 28px;
+    -fx-background-radius: 14;
+    -fx-padding: 10 16;
+    -fx-alignment: center-left;
+}
+
+/* ── Serial number chips ─────────────────────────────────────── */
+.serial-chip {
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #1E40AF;
+    -fx-background-color: #EFF6FF;
+    -fx-background-radius: 8;
+    -fx-padding: 7 12;
+    -fx-border-color: #BFDBFE;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.copy-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #94A3B8;
+    -fx-font-size: 14px;
+    -fx-padding: 4 8;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-border-width: 0;
+    -fx-min-width: 32;
+}
+
+.copy-button:hover {
+    -fx-background-color: #F1F5F9;
+    -fx-text-fill: #2563EB;
+}
+
+/* ── Status badges ───────────────────────────────────────────── */
+.status-badge-pending {
+    -fx-background-color: #FEF3C7;
+    -fx-text-fill: #92400E;
+    -fx-background-radius: 20;
+    -fx-padding: 4 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+}
+
+.status-badge-ok {
+    -fx-background-color: #DCFCE7;
+    -fx-text-fill: #166534;
+    -fx-background-radius: 20;
+    -fx-padding: 4 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+}
+
+.status-badge-error {
+    -fx-background-color: #FEE2E2;
+    -fx-text-fill: #991B1B;
+    -fx-background-radius: 20;
+    -fx-padding: 4 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+}
+
+.status-badge-shipped {
+    -fx-background-color: #F3E8FF;
+    -fx-text-fill: #6B21A8;
+    -fx-background-radius: 20;
+    -fx-padding: 4 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+}
+
+/* ── Order reference (monospace short id) ────────────────────── */
+.order-ref-short {
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748B;
+}
+
+/* ── Serial count label ──────────────────────────────────────── */
+.serials-count-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748B;
+    -fx-font-weight: 600;
+    -fx-padding: 6 0 2 0;
+}
+
+/* ── Improved history items ──────────────────────────────────── */
+.history-item {
+    -fx-padding: 16 18;
+}
+
+/* ── Notification left accent ────────────────────────────────── */
+.notification-success {
+    -fx-border-width: 0 0 0 4;
+    -fx-border-color: #16A34A;
+}
+
+.notification-error {
+    -fx-border-width: 0 0 0 4;
+    -fx-border-color: #DC2626;
+}
+
+/* ── Hero emoji on home page ─────────────────────────────────── */
+.hero-emoji {
+    -fx-font-size: 48px;
+    -fx-padding: 0 0 4 0;
+}
+
+/* ── Outline button (secondary action on light bg) ───────────── */
+.outline-button {
+    -fx-background-color: white;
+    -fx-border-color: #CBD5E1;
+    -fx-border-width: 1.5;
+    -fx-text-fill: #1E293B;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-padding: 12 18;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-cursor: hand;
+}
+
+.outline-button:hover {
+    -fx-background-color: #F8FAFC;
+    -fx-border-color: #94A3B8;
+}

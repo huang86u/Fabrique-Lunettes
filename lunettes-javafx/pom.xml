@@ -11,6 +11,12 @@
     </parent>
 
     <artifactId>lunettes-javafx</artifactId>
+    <repositories>
+        <repository>
+            <id>github-le-prof-de-raizo</id>
+            <url>https://maven.pkg.github.com/le-prof-de-raizo/repo-maven</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -35,6 +41,11 @@
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+        <dependency>
+            <groupId>bernard-flou</groupId>
+            <artifactId>fabricateur</artifactId>
+            <version>0.0.1</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -42,7 +53,7 @@
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.13</version>
+                <version>0.0.8</version>
                 <configuration>
                     <mainClass>fr.miage.client.App</mainClass>
                 </configuration>
