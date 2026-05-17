@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>fr.miage</groupId>
+        <groupId>com.github.huang86u</groupId>
         <artifactId>projet-lunettes</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>

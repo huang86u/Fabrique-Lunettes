@@ -20,11 +20,26 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          server-id: github
-          server-username: ${{ github.actor }}
-          server-password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Création du settings.xml pour Maven
+        run: |
+          mkdir -p ~/.m2
+          cat <<EOF > ~/.m2/settings.xml
+          <settings>
+            <servers>
+              <server>
+                <id>github</id>
+                <username>${{ github.actor }}</username>
+                <password>${{ secrets.GITHUB_TOKEN }}</password>
+              </server>
+              <server>
+                <id>github-le-prof-de-raizo</id>
+                <username>le-prof-de-raizo</username>
+                <password>${{secrets.PROF_TOKEN}}</password> 
+              </server>
+            </servers>
+          </settings>
+          EOF
 
       - name: Compilation et publication (Deploy)
         run: mvn clean deploy -DskipTests
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
