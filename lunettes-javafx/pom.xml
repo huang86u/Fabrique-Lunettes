@@ -11,6 +11,12 @@
     </parent>
 
     <artifactId>lunettes-javafx</artifactId>
+    <repositories>
+        <repository>
+            <id>github-le-prof-de-raizo</id>
+            <url>https://maven.pkg.github.com/le-prof-de-raizo/repo-maven</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -34,6 +40,11 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>bernard-flou</groupId>
+            <artifactId>fabricateur</artifactId>
+            <version>0.0.1</version>
         </dependency>
     </dependencies>
 
