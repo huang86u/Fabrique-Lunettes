@@ -585,7 +585,11 @@ public class ClientShell {
         SpinnerValueFactory.IntegerSpinnerValueFactory valueFactory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 9, quantityProperty.get());
         spinner.setValueFactory(valueFactory);
-        valueFactory.valueProperty().bindBidirectional(quantityProperty.asObject());
+        valueFactory.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                quantityProperty.set(newValue);
+            }
+        });
         spinner.setEditable(false);
         spinner.setPrefWidth(110);
         spinner.getStyleClass().add("quantity-spinner");
