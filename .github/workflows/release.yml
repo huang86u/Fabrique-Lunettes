@@ -43,3 +43,12 @@ jobs:
 
       - name: Compilation et publication (Deploy)
         run: mvn clean deploy -DskipTests
+
+      - name: Upload du JAR Backend (Usine)
+        uses: softprops/actions-gh-release@v2
+        with:
+          files: lunettes-backend/target/*-jar-with-dependencies.jar
+      - name: Upload du JAR Frontend (Interface)
+        uses: softprops/actions-gh-release@v2
+        with:
+          files: lunettes-javafx/target/lunettes-javafx-*.jar
