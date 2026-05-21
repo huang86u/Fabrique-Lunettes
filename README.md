@@ -1,88 +1,42 @@
-# **La Fabrique de Lunettes**
+# Fabrique de Lunettes 
 
-Bienvenue dans le projet de la Fabrique de Lunettes ! 
-Ce projet implémente un système distribué permettant de commander des lunettes connectées, de les faire fabriquer par une usine, et de suivre leur expédition grâce à une architecture orientée événements (EDA).
+Ce dépôt contient le code source et les livrables du projet "Fabrique de Lunettes" réalisé dans le cadre du M1 MIAGE à l'IDMC.
 
-## Architecture du projet
+Ce document explique uniquement comment récupérer et lancer les exécutables (`.jar`) prêts à l'emploi de notre application. 
+*Pour l'architecture détaillée, le fonctionnement du protocole MQTT et nos choix de conception, veuillez vous référer à notre rapport PDF.*
 
-Le projet est divisé en 3 modules Maven :
-* `lunettes-shared` : Contient les modèles de données (`Commande`, `TypeLunette`) et le protocole de sérialisation des messages "maison".
-* `lunettes-backend` : Le serveur/usine qui écoute les commandes MQTT, valide les requêtes et pilote la machine de fabrication.
-* `lunettes-javafx` : L'interface graphique cliente permettant de naviguer dans le catalogue et de passer commande.
+---
 
 ## Prérequis
 
-Pour exécuter ce projet sur votre machine, vous devez installer :
-1. **Java Development Kit (JDK) 21**
-2. **Apache Maven**
-3. **Eclipse Mosquitto** (Broker MQTT) : [Télécharger ici](https://mosquitto.org/download/)
+Avant de lancer l'application, assurez-vous d'avoir les éléments suivants actifs sur votre machine :
+1. **Java 21** (ou une version supérieure).
+2. **Un broker MQTT** (comme [Eclipse Mosquitto](https://mosquitto.org/)). Le broker doit être lancé et écouter sur le port par défaut (`localhost:1883`).
 
+---
 
-## Configuration
+## Récupération et Lancement
 
-Ce projet dépend d'une librairie privée hébergée sur GitHub (`fabricateur`). Pour que Maven puisse la télécharger, vous devez configurer vos identifiants.
+Les exécutables autonomes sont générés automatiquement par notre pipeline CI/CD.
 
-1. Allez dans votre dossier utilisateur (`C:\Users\VotreNom\.m2\`sur Windows).
-2. Créez ou modifiez le fichier `settings.xml`.
-3. Ajoutez-y la configuration suivante avec les accès fournis par le professeur :
+### 1. Télécharger les livrables
+Rendez-vous dans l'onglet **Releases** (à droite sur la page d'accueil de ce dépôt GitHub) et téléchargez les deux fichiers présents dans la section "Assets" de la dernière version :
+* `lunettes-backend-1.0-SNAPSHOT-jar-with-dependencies.jar` *(Le composant Usine)*
+* `lunettes-javafx-1.0-SNAPSHOT.jar` *(L'interface Client)*
 
-```xml
-<settings xmlns="[http://maven.apache.org/SETTINGS/1.0.0](http://maven.apache.org/SETTINGS/1.0.0)"
-          xmlns:xsi="[http://www.w3.org/2001/XMLSchema-instance](http://www.w3.org/2001/XMLSchema-instance)"
-          xsi:schemaLocation="[http://maven.apache.org/SETTINGS/1.0.0](http://maven.apache.org/SETTINGS/1.0.0)
-                              [http://maven.apache.org/xsd/settings-1.0.0.xsd](http://maven.apache.org/xsd/settings-1.0.0.xsd)">
-    <servers>
-        <server>
-            <id>github-le-prof-de-raizo</id>
-            <username>le-prof-de-raizo</username>
-            <password>TOKEN_DU_PROF_ICI</password>
-        </server>
-    </servers>
-</settings>
+### 2. Démarrer l'Usine (Backend)
+Ouvrez un terminal dans le dossier où vous avez téléchargé les fichiers et lancez la commande suivante :
+```bash
+java -jar lunettes-backend-1.0-SNAPSHOT-jar-with-dependencies.jar
 ```
+*L'usine va s'initialiser, se connecter au broker MQTT local et se mettre en écoute.*
 
-## Protocole MQTT
+### 3. Démarrer l'interface Graphique (Interface)
+Laissez le premier terminal ouvert. Ouvrez un second terminal dans ce même dossier et lancez le client JavaFX:
 
-Le format de commande est un format texte maison :
-
-```text
-TYPE:QUANTITE,TYPE:QUANTITE
+```bash
+java -jar lunettes-javafx-1.0-SNAPSHOT.jar
 ```
-
-Exemple :
-
-```text
-BANANA:2,CLAUDE:1
-```
-
-Le format de livraison est aussi un format texte maison :
-
-```text
-TYPE:NUMERO_SERIE,TYPE:NUMERO_SERIE
-```
-
-Exemple :
-
-```text
-BANANA:SN123,CLAUDE:SN456
-```
-
-Topics utilises :
-
-```text
-orders/{idCommande}
-orders/{idCommande}/validated
-orders/{idCommande}/cancelled
-orders/{idCommande}/status
-orders/{idCommande}/delivery
-orders/{idCommande}/error
-serials/{numeroSerie}/check
-serials/{numeroSerie}
-```
-
-Statuts possibles :
-
-```text
-processing
-processed
-```
+### Notes de configuration
+Par défaut, l'application se connecte au broker via l'URL `tcp://localhost:1883`
+Si vous devez recompiler le projet vous-même ou modifier cette adresse, vous pouvez éditer les fichiers de configuration application.properties (pour le backend) et frontend.properties (pour le frontend) présents dans le code source, puis lancer la commande mvn clean package.
