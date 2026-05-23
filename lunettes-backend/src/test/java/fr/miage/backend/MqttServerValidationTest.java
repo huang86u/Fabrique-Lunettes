@@ -1,50 +1,51 @@
 package fr.miage.backend;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import fr.miage.shared.Commande;
 import fr.miage.shared.TypeLunette;
 import java.lang.reflect.Method;
 import java.util.EnumMap;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 
-public class MqttServerValidationTest {
+class MqttServerValidationTest {
 
-    public static void main(String[] args) throws Exception {
-        testerCommandeValide();
-        testerCommandeVideInvalide();
-        testerQuantiteTotaleNulleInvalide();
-        testerQuantiteNegativeInvalide();
-        testerQuantiteDixInvalide();
-        System.out.println("Tous les tests MqttServerValidation sont passés.");
+    @Test
+    void validerCommandeAccepteUneQuantiteEntreUnEtNeuf() throws Exception {
+        assertTrue(valider(creerCommande(TypeLunette.BANANA, 1)));
+        assertTrue(valider(creerCommande(TypeLunette.CLAUDE, 9)));
     }
 
-    private static void testerCommandeValide() throws Exception {
-        Commande commande = creerCommande(TypeLunette.BANANA, 2);
-
-        verifier(validerCommande(commande), "Une commande avec une quantité entre 0 et 10 doit être valide");
+    @Test
+    void validerCommandeRefuseUneCommandeVide() throws Exception {
+        assertFalse(valider(new Commande(Map.of())));
     }
 
-    private static void testerCommandeVideInvalide() throws Exception {
-        Commande commande = new Commande(Map.of());
-
-        verifier(!validerCommande(commande), "Une commande vide doit être invalide");
+    @Test
+    void validerCommandeRefuseUneQuantiteTotaleNulle() throws Exception {
+        assertFalse(valider(creerCommande(TypeLunette.CHATGPT, 0)));
     }
 
-    private static void testerQuantiteTotaleNulleInvalide() throws Exception {
-        Commande commande = creerCommande(TypeLunette.BANANA, 0);
-
-        verifier(!validerCommande(commande), "Une commande avec quantité totale nulle doit être invalide");
+    @Test
+    void validerCommandeRefuseUneQuantiteNegative() throws Exception {
+        assertFalse(valider(creerCommande(TypeLunette.LE_CHAT, -1)));
     }
 
-    private static void testerQuantiteNegativeInvalide() throws Exception {
-        Commande commande = creerCommande(TypeLunette.BANANA, -1);
-
-        verifier(!validerCommande(commande), "Une quantité negative doit être invalide");
+    @Test
+    void validerCommandeRefuseUneQuantiteEgaleOuSuperieureADix() throws Exception {
+        assertFalse(valider(creerCommande(TypeLunette.BANANA, 10)));
+        assertFalse(valider(creerCommande(TypeLunette.BANANA, 12)));
     }
 
-    private static void testerQuantiteDixInvalide() throws Exception {
-        Commande commande = creerCommande(TypeLunette.BANANA, 10);
+    @Test
+    void validerCommandeRefuseUneCommandeMixteAvecUneLigneInvalide() throws Exception {
+        Map<TypeLunette, Integer> lignes = new EnumMap<>(TypeLunette.class);
+        lignes.put(TypeLunette.BANANA, 2);
+        lignes.put(TypeLunette.CLAUDE, 10);
 
-        verifier(!validerCommande(commande), "Une quantité egale à 10 doit être invalide");
+        assertFalse(valider(new Commande(lignes)));
     }
 
     private static Commande creerCommande(TypeLunette type, int quantite) {
@@ -53,16 +54,10 @@ public class MqttServerValidationTest {
         return new Commande(lignes);
     }
 
-    private static boolean validerCommande(Commande commande) throws Exception {
-        MqttServer server = new MqttServer();
+    private static boolean valider(Commande commande) throws Exception {
+        MqttServer serveur = new MqttServer();
         Method methode = MqttServer.class.getDeclaredMethod("validerCommande", Commande.class);
         methode.setAccessible(true);
-        return (boolean) methode.invoke(server, commande);
-    }
-
-    private static void verifier(boolean condition, String message) {
-        if (!condition) {
-            throw new AssertionError(message);
-        }
+        return (boolean) methode.invoke(serveur, commande);
     }
 }
