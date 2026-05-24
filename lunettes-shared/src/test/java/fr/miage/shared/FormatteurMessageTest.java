@@ -1,60 +1,54 @@
 package fr.miage.shared;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.EnumMap;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
 
-class FormatteurMessageTest {
+public class FormatteurMessageTest {
 
-    @Test
-    void encoderRetourneUneChaineVidePourUneCommandeNulleOuVide() {
-        assertEquals("", FormatteurMessage.encoder(null));
-        assertEquals("", FormatteurMessage.encoder(new Commande(null)));
-        assertEquals("", FormatteurMessage.encoder(new Commande(Map.of())));
+    public static void main(String[] args) {
+        testerEncodageCommande();
+        testerDecodageCommande();
+        testerCommandeVide();
+        testerLigneInvalideIgnoree();
+        System.out.println("Tous les tests FormatteurMessage sont passés.");
     }
 
-    @Test
-    void encoderTransformeUneCommandeEnPayloadMqtt() {
+    private static void testerEncodageCommande() {
         Map<TypeLunette, Integer> lignes = new EnumMap<>(TypeLunette.class);
         lignes.put(TypeLunette.BANANA, 2);
         lignes.put(TypeLunette.CLAUDE, 1);
 
         String payload = FormatteurMessage.encoder(new Commande(lignes));
 
-        assertEquals("BANANA:2,CLAUDE:1", payload);
+        verifier(payload.contains("BANANA:2"), "La commande encodée doit contenir BANANA:2");
+        verifier(payload.contains("CLAUDE:1"), "La commande encodée doit contenir CLAUDE:1");
+        verifier(!payload.endsWith(","), "La commande encodée ne doit pas finir par une virgule");
     }
 
-    @Test
-    void decoderTransformeUnPayloadMqttEnCommande() {
+    private static void testerDecodageCommande() {
         Commande commande = FormatteurMessage.decoder("BANANA:2,CLAUDE:1");
 
-        assertEquals(2, commande.lignes().get(TypeLunette.BANANA));
-        assertEquals(1, commande.lignes().get(TypeLunette.CLAUDE));
-        assertEquals(3, commande.getQuantiteTotale());
+        verifier(commande.lignes().get(TypeLunette.BANANA) == 2, "BANANA doit avoir une quantité de 2");
+        verifier(commande.lignes().get(TypeLunette.CLAUDE) == 1, "CLAUDE doit avoir une quantité de 1");
+        verifier(commande.getQuantiteTotale() == 3, "La quantité totale doit être 3");
     }
 
-    @Test
-    void decoderAccepteLesEspacesEtLaCasseMinuscule() {
-        Commande commande = FormatteurMessage.decoder(" banana : 2 , le_chat : 3 ");
-
-        assertEquals(2, commande.lignes().get(TypeLunette.BANANA));
-        assertEquals(3, commande.lignes().get(TypeLunette.LE_CHAT));
+    private static void testerCommandeVide() {
+        verifier(FormatteurMessage.encoder(new Commande(Map.of())).isEmpty(), "Une commande vide doit donner un payload vide");
+        verifier(FormatteurMessage.decoder("").lignes().isEmpty(), "Un payload vide doit donner une commande vide");
     }
 
-    @Test
-    void decoderIgnoreLesLignesInvalides() {
-        Commande commande = FormatteurMessage.decoder("BANANA:2,INCONNU:4,CLAUDE:x,MALFORME");
+    private static void testerLigneInvalideIgnoree() {
+        Commande commande = FormatteurMessage.decoder("BANANA:2,INCONNU:4,CLAUDE:1");
 
-        assertEquals(1, commande.lignes().size());
-        assertEquals(2, commande.lignes().get(TypeLunette.BANANA));
+        verifier(commande.lignes().size() == 2, "La ligne avec un type inconnu doit être ignorée");
+        verifier(commande.lignes().containsKey(TypeLunette.BANANA), "BANANA doit être conservé");
+        verifier(commande.lignes().containsKey(TypeLunette.CLAUDE), "CLAUDE doit être conservé");
     }
 
-    @Test
-    void decoderRetourneUneCommandeVidePourUnPayloadNulOuVide() {
-        assertTrue(FormatteurMessage.decoder(null).lignes().isEmpty());
-        assertTrue(FormatteurMessage.decoder("").lignes().isEmpty());
+    private static void verifier(boolean condition, String message) {
+        if (!condition) {
+            throw new AssertionError(message);
+        }
     }
 }

@@ -19,7 +19,6 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 public class MqttServer implements MqttCallback {
     private final Usine usine = new Usine();
-    private final Map<String, String> registreNumerosSerie = new ConcurrentHashMap<>();
     private final Map<String, SuiviCommande> commandesEnCours = new ConcurrentHashMap<>();
     private MqttClient client;
 
@@ -38,6 +37,7 @@ public class MqttServer implements MqttCallback {
 
     public MqttServer() {
         usine.setOnLunetteFabriquee(this::notifierLunettePrete);
+        usine.setOnErreurFabrication(this::notifierErreurFabrication);
     }
 
     public void start(String brokerUrl, String clientId) {
@@ -112,7 +112,15 @@ public class MqttServer implements MqttCallback {
     }
 
     private void traiterCommande(String orderId, String payload) {
-        Commande commande = FormatteurMessage.decoder(payload);
+        Commande commande;
+        try {
+            commande = FormatteurMessage.decoder(payload);
+        } catch (IllegalArgumentException exception) {
+            System.out.println("Commande " + orderId + " invalide !");
+            publierMessage(cancelledTopic(orderId), "Commande invalide : " + exception.getMessage());
+            return;
+        }
+
         boolean isValid = validerCommande(commande);
 
         if (!isValid) {
@@ -160,7 +168,6 @@ public class MqttServer implements MqttCallback {
                 
                 // Si toutes les lunettes de cette commande sont terminées
                 if (suivi.estTerminee()) {
-                    enregistrerNumerosSerie(suivi.lunettesFabriquees);
                     publierMessage(statusTopic(orderId), "processed");
                     publierMessage(deliveryTopic(orderId), construireMessageLivraison(suivi.lunettesFabriquees));
                     commandesEnCours.remove(orderId);
@@ -169,9 +176,9 @@ public class MqttServer implements MqttCallback {
         }
     }
 
-    private void enregistrerNumerosSerie(List<Fabricateur.Lunette> lunettes) {
-        for (Fabricateur.Lunette lunette : lunettes) {
-            registreNumerosSerie.put(lunette.serial, lunette.type.name());
+    private void notifierErreurFabrication(String orderId, String description) {
+        if (commandesEnCours.remove(orderId) != null) {
+            publierMessage(errorTopic(orderId), "Erreur pendant la fabrication : " + description);
         }
     }
 
@@ -184,8 +191,12 @@ public class MqttServer implements MqttCallback {
     }
 
     private void verifierNumeroSerie(String numeroSerie) {
-        String type = registreNumerosSerie.getOrDefault(numeroSerie, "invalid");
-        publierMessage(serialResponseTopic(numeroSerie), type);
+        try {
+            Fabricateur.TypeLunette type = Fabricateur.validateSerial(numeroSerie);
+            publierMessage(serialResponseTopic(numeroSerie), type == null ? "invalid" : type.name());
+        } catch (RuntimeException exception) {
+            publierMessage(serialResponseTopic(numeroSerie), "invalid");
+        }
     }
 
     private String validatedTopic(String orderId) { return "orders/" + orderId + "/validated"; }

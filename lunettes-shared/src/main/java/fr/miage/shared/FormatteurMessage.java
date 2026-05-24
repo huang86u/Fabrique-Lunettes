@@ -1,7 +1,7 @@
 package fr.miage.shared;
 
+import java.util.EnumMap;
 import java.util.Map;
-import java.util.HashMap;
 
 public class FormatteurMessage {
     // Encode la commande pour MQTT
@@ -26,23 +26,29 @@ public class FormatteurMessage {
     // Decode le message MQTT en Commande
     // Exemple d'entrée : "BANANA:2,CLAUDE:1"
     public static Commande decoder(String payload){
-        Map<TypeLunette, Integer> lignes = new HashMap<>();
+        Map<TypeLunette, Integer> lignes = new EnumMap<>(TypeLunette.class);
         if (payload == null || payload.isEmpty()) {
             return new Commande(lignes);
         }
 
-        String[] paires = payload.split(",");
+        String[] paires = payload.split(",", -1);
         for (String paire : paires){
-            String[] elements = paire.split(":");
-            if (elements.length == 2) {
-                try{
-                    // Convertir TypeLunette et entier
-                    TypeLunette type = TypeLunette.valueOf(elements[0].trim().toUpperCase());
-                    int quantite = Integer.parseInt(elements[1].trim());
-                    lignes.put(type, quantite);
-                } catch (IllegalArgumentException e) {
-                    // A voir si je met un message d'erreur ou si je laisse tomber la ligne mal formée
-                }
+            String[] elements = paire.split(":", -1);
+            if (elements.length != 2 || elements[0].isBlank() || elements[1].isBlank()) {
+                throw new IllegalArgumentException("format de commande invalide");
+            }
+
+            TypeLunette type;
+            try {
+                type = TypeLunette.valueOf(elements[0].trim().toUpperCase());
+            } catch (IllegalArgumentException exception) {
+                throw new IllegalArgumentException("type de lunette inconnu : " + elements[0].trim(), exception);
+            }
+
+            try {
+                lignes.put(type, Integer.parseInt(elements[1].trim()));
+            } catch (NumberFormatException exception) {
+                throw new IllegalArgumentException("quantite invalide pour " + type.name(), exception);
             }
         }
         return new Commande(lignes);

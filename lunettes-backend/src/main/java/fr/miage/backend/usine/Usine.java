@@ -4,8 +4,10 @@ import bernard_flou.Fabricateur;
 import fr.miage.shared.Commande;
 import fr.miage.shared.TypeLunette;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,9 +16,11 @@ import java.util.function.BiConsumer;
 
 public class Usine {
     private final Fabricateur fabricateur;
+    private final Object verrouFabricateur = new Object();
     private final Map<Fabricateur.TypeLunette, Queue<String>> filesDAttente = new ConcurrentHashMap<>();
     
     private BiConsumer<String, Fabricateur.Lunette> onLunetteFabriquee;
+    private BiConsumer<String, String> onErreurFabrication;
 
     public Usine() {
         this.fabricateur = new Fabricateur();
@@ -29,6 +33,41 @@ public class Usine {
 
     public void setOnLunetteFabriquee(BiConsumer<String, Fabricateur.Lunette> callback) {
         this.onLunetteFabriquee = callback;
+    }
+
+    public void setOnErreurFabrication(BiConsumer<String, String> callback) {
+        this.onErreurFabrication = callback;
+    }
+
+    /**
+     * Produit une commande directement. L'accès au fabricateur est serialise
+     * car une seule machine est partagée par les appels concurrents.
+     */
+    public List<Fabricateur.Lunette> produire(final Map<TypeLunette, Integer> typesLunettes) {
+        if (typesLunettes == null) {
+            throw new IllegalArgumentException("La commande ne peut pas être nulle");
+        }
+
+        Map<Fabricateur.TypeLunette, Integer> lignes = convertirCommande(new Commande(typesLunettes));
+        List<Fabricateur.Lunette> lunettes = new ArrayList<>();
+
+        for (Map.Entry<Fabricateur.TypeLunette, Integer> ligne : lignes.entrySet()) {
+            int restant = ligne.getValue();
+            while (restant > 0) {
+                synchronized (verrouFabricateur) {
+                    int lot = Math.min(Math.max(1, fabricateur.getCapacity()), restant);
+                    Fabricateur.TypeLunette[] configuration = new Fabricateur.TypeLunette[lot];
+                    Arrays.fill(configuration, ligne.getKey());
+                    fabricateur.configurer(configuration);
+                    for (int index = 0; index < lot; index++) {
+                        lunettes.add(fabricateur.fabriquer(ligne.getKey()));
+                    }
+                    restant -= lot;
+                }
+            }
+        }
+
+        return lunettes;
     }
 
     // Ajoute simplement la commande à la file, sans bloquer !
@@ -48,28 +87,40 @@ public class Usine {
                 
                 for (Fabricateur.TypeLunette type : Fabricateur.TypeLunette.values()) {
                     Queue<String> file = filesDAttente.get(type);
-                    
+                     
                     if (!file.isEmpty()) {
-                        int capacite = Math.max(1, fabricateur.getCapacity());
-                        int lot = Math.min(capacite, file.size()); // On groupe jusqu'à la capacité max !
-                        
-                        Fabricateur.TypeLunette[] configuration = new Fabricateur.TypeLunette[lot];
-                        Arrays.fill(configuration, type);
-                        
-                        fabricateur.configurer(configuration);
-                        
-                        // Fabrication du lot groupé
+                        List<String> commandesDuLot = new ArrayList<>();
+                        int lot;
+                        synchronized (verrouFabricateur) {
+                            int capacite = Math.max(1, fabricateur.getCapacity());
+                            lot = Math.min(capacite, file.size());
+                        }
+
                         for (int index = 0; index < lot; index++) {
                             String orderId = file.poll();
                             if (orderId != null) {
-                                try {
+                                commandesDuLot.add(orderId);
+                            }
+                        }
+
+                        try {
+                            synchronized (verrouFabricateur) {
+                                Fabricateur.TypeLunette[] configuration =
+                                        new Fabricateur.TypeLunette[commandesDuLot.size()];
+                                Arrays.fill(configuration, type);
+                                fabricateur.configurer(configuration);
+
+                                for (String orderId : commandesDuLot) {
                                     Fabricateur.Lunette lunette = fabricateur.fabriquer(type);
                                     if (onLunetteFabriquee != null) {
                                         onLunetteFabriquee.accept(orderId, lunette);
                                     }
-                                } catch (Exception exception) {
-                                    System.err.println("Erreur de fabrication : " + exception.getMessage());
                                 }
+                            }
+                        } catch (Exception exception) {
+                            System.err.println("Erreur de fabrication : " + exception.getMessage());
+                            for (String orderId : commandesDuLot) {
+                                notifierErreur(orderId, exception);
                             }
                         }
                         aProduit = true;
@@ -85,6 +136,12 @@ public class Usine {
         
         thread.setDaemon(true);
         thread.start();
+    }
+
+    private void notifierErreur(String orderId, Exception exception) {
+        if (onErreurFabrication != null) {
+            onErreurFabrication.accept(orderId, exception.getMessage());
+        }
     }
 
     private Map<Fabricateur.TypeLunette, Integer> convertirCommande(Commande commande) {
