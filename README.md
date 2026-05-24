@@ -20,8 +20,8 @@ Les exécutables autonomes sont générés automatiquement par notre pipeline CI
 
 ### 1. Télécharger les livrables
 Rendez-vous dans l'onglet **Releases** (à droite sur la page d'accueil de ce dépôt GitHub) et téléchargez les deux fichiers présents dans la section "Assets" de la dernière version :
-* `lunettes-backend-1.0-SNAPSHOT-jar-with-dependencies.jar` *(Le composant Usine)* <a href="https://drive.google.com/file/d/1YybiCxoGsxjQeJyBsdK6xh-hfSd7yKV2/view?usp=sharing" download>ici</a>
-* `lunettes-javafx-1.0-SNAPSHOT.jar` *(L'interface Client)* <a href="https://drive.google.com/file/d/1IzpNmYm2bD2YhTkspjttXqAnc5QqcFaW/view?usp=sharing" download>ici</a>
+* `lunettes-backend-1.0-SNAPSHOT-jar-with-dependencies.jar` *(Le composant Usine)* <a href="https://drive.google.com/file/d/1IzpNmYm2bD2YhTkspjttXqAnc5QqcFaW/view?usp=sharing" download>ici</a>
+* `lunettes-javafx-1.0-SNAPSHOT.jar` *(L'interface Client)* <a href="https://drive.google.com/file/d/1YybiCxoGsxjQeJyBsdK6xh-hfSd7yKV2/view?usp=sharing" download>ici</a>
 
 ### 2. Démarrer l'Usine (Backend)
 Ouvrez un terminal dans le dossier où vous avez téléchargé les fichiers et lancez la commande suivante :
