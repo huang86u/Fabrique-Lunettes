@@ -20,7 +20,25 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 public class MqttServer implements MqttCallback {
     private final Usine usine = new Usine();
     private final Map<String, String> registreNumerosSerie = new ConcurrentHashMap<>();
+    private final Map<String, SuiviCommande> commandesEnCours = new ConcurrentHashMap<>();
     private MqttClient client;
+
+    private static class SuiviCommande {
+        int quantiteTotaleAttendue;
+        List<Fabricateur.Lunette> lunettesFabriquees = new ArrayList<>();
+
+        SuiviCommande(int total) {
+            this.quantiteTotaleAttendue = total;
+        }
+
+        boolean estTerminee() {
+            return lunettesFabriquees.size() == quantiteTotaleAttendue;
+        }
+    }
+
+    public MqttServer() {
+        usine.setOnLunetteFabriquee(this::notifierLunettePrete);
+    }
 
     public void start(String brokerUrl, String clientId) {
         try {
@@ -129,17 +147,25 @@ public class MqttServer implements MqttCallback {
     }
 
     private void produireEtLivrer(String orderId, Commande commande) {
-        try {
-            List<Fabricateur.Lunette> lunettes;
-            synchronized (usine) {
-                publierMessage(statusTopic(orderId), "processing");
-                lunettes = usine.produire(commande);
+        publierMessage(statusTopic(orderId), "processing");
+        commandesEnCours.put(orderId, new SuiviCommande(commande.getQuantiteTotale()));
+        usine.ajouterCommande(orderId, commande);
+    }
+
+    private void notifierLunettePrete(String orderId, Fabricateur.Lunette lunette) {
+        SuiviCommande suivi = commandesEnCours.get(orderId);
+        if (suivi != null) {
+            synchronized (suivi) {
+                suivi.lunettesFabriquees.add(lunette);
+                
+                // Si toutes les lunettes de cette commande sont terminées
+                if (suivi.estTerminee()) {
+                    enregistrerNumerosSerie(suivi.lunettesFabriquees);
+                    publierMessage(statusTopic(orderId), "processed");
+                    publierMessage(deliveryTopic(orderId), construireMessageLivraison(suivi.lunettesFabriquees));
+                    commandesEnCours.remove(orderId);
+                }
             }
-            enregistrerNumerosSerie(lunettes);
-            publierMessage(statusTopic(orderId), "processed");
-            publierMessage(deliveryTopic(orderId), construireMessageLivraison(lunettes));
-        } catch (RuntimeException exception) {
-            publierMessage(errorTopic(orderId), "Fabrication interrompue : " + exception.getMessage());
         }
     }
 
